@@ -20,7 +20,7 @@
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
 }
 
-/* ✅ FIX 1: body fills full screen height */
+/* ✅ FIX: body fills full screen height */
 body {
   font-family: 'Segoe UI', system-ui, sans-serif;
   background: var(--bg);
@@ -32,9 +32,16 @@ body {
 }
 a { text-decoration: none; color: var(--primary); }
 a:hover { color: var(--primary-dark); }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 
-/* ✅ FIX 2: main content stretches to fill space */
-.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; flex: 1; }
+/* ✅ FIX: only these sections stretch, not container itself */
+.page-header,
+.product-detail-page,
+.profile-page,
+.form-page,
+.auth-page,
+.listings-section,
+.categories-section { flex: 1; }
 
 /* ===========================
    NAVBAR
@@ -139,8 +146,23 @@ a:hover { color: var(--primary-dark); }
 .search-bar input:focus { border-color: var(--primary); }
 .search-bar button { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
 
-.browse-layout { display: grid; grid-template-columns: 220px 1fr; gap: 28px; padding-top: 28px; padding-bottom: 48px; }
-.filters-sidebar { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; height: fit-content; }
+.browse-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 28px;
+  padding-top: 28px;
+  padding-bottom: 48px;
+  align-items: start;
+}
+.filters-sidebar {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  height: fit-content;
+  position: sticky;
+  top: 80px;
+}
 .filters-sidebar h3 { font-size: 1rem; margin-bottom: 16px; color: var(--text); }
 .filter-group { margin-bottom: 16px; }
 .filter-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
@@ -316,10 +338,16 @@ a:hover { color: var(--primary-dark); }
 .tips-card-text { font-size: 0.85rem; color: var(--text); line-height: 1.4; }
 
 /* ===========================
-   FOOTER & MISC
+   FOOTER
 =========================== */
-/* ✅ FIX 3: footer always at bottom */
-.footer { background: var(--text); color: #94a3b8; text-align: center; padding: 24px; font-size: 0.9rem; margin-top: auto; }
+.footer {
+  background: var(--text);
+  color: #94a3b8;
+  text-align: center;
+  padding: 24px;
+  font-size: 0.9rem;
+  margin-top: auto;
+}
 .loading { text-align: center; padding: 40px; color: var(--text-muted); }
 .empty { text-align: center; padding: 40px; color: var(--text-muted); font-size: 1rem; }
 .error { text-align: center; padding: 40px; color: var(--danger); }
@@ -330,7 +358,7 @@ a:hover { color: var(--primary-dark); }
 @media (max-width: 900px) {
   .categories-grid { grid-template-columns: repeat(3, 1fr); }
   .browse-layout { grid-template-columns: 1fr; }
-  .filters-sidebar { display: flex; gap: 16px; flex-wrap: wrap; }
+  .filters-sidebar { display: flex; gap: 16px; flex-wrap: wrap; position: static; }
   .product-detail-card { grid-template-columns: 1fr; }
   .tips-cards { grid-template-columns: repeat(2, 1fr); }
 }
