@@ -1,7 +1,7 @@
 // ============================================================
 //  API Configuration — change this to your Railway backend URL
 // ============================================================
-const BASE_URL = 'https://YOUR-RAILWAY-APP.up.railway.app';
+const BASE_URL = 'https://student-market-place-documentation-production.up.railway.app';
 // Example: const BASE_URL = 'https://ossd-backend.up.railway.app';
 
 const API = {
