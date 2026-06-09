@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -41,7 +41,7 @@ def create_access_token(data: dict):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-def get_user_from_header(authorization: Optional[str] = None, db: Session = Depends(database.get_db)):
+def get_user_from_header(authorization: Optional[str] = Header(None), db: Session = Depends(database.get_db)):
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing or invalid authorization token format.")
     token = authorization.split(" ")[1]
@@ -67,9 +67,6 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_d
     existing_user = db.query(models.User).filter(models.User.email == user.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="An account with this student email already exists.")
-
-    if len(user.password.encode("utf-8")) > 72:
-        raise HTTPException(status_code=400, detail="Password must not exceed 72 bytes.")
 
     hashed_pwd = hash_password(user.password)
     new_user = models.User(name=user.name, email=user.email, password=hashed_pwd)
@@ -132,11 +129,11 @@ def create_product(product: schemas.ProductCreate, current_user: models.User = D
 @app.put("/products/{id}", response_model=schemas.ProductResponse)
 def update_product(id: int, updated_fields: schemas.ProductUpdate, current_user: models.User = Depends(get_user_from_header), db: Session = Depends(database.get_db)):
     product_query = db.query(models.Product).filter(models.Product.product_id == id)
-    product = product_query.first()
+    project = product_query.first()
 
-    if not product:
+    if not project:
         raise HTTPException(status_code=404, detail="Product not found.")
-    if product.user_id != current_user.user_id:
+    if project.user_id != current_user.user_id:
         raise HTTPException(status_code=403, detail="Unauthorized action. You do not own this listing.")
 
     update_data = updated_fields.model_dump(exclude_unset=True)
