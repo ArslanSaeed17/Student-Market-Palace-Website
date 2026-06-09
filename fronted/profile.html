@@ -32,65 +32,7 @@
     </div>
   </div>
 </div>
-<!-- Student Tips Banner -->
-<div class="tips-banner">
-  <div class="tips-banner-inner">
-    <div class="tips-banner-title">Safety tips for students</div>
-    <div class="tips-rotating">
-      <span class="tips-rotating-icon">🛡️</span>
-      <span class="tips-rotating-text" id="tipText">Always meet in a public place like a campus cafeteria or library.</span>
-      <div class="tips-dots">
-        <div class="tips-dot active" id="td0"></div>
-        <div class="tips-dot" id="td1"></div>
-        <div class="tips-dot" id="td2"></div>
-        <div class="tips-dot" id="td3"></div>
-        <div class="tips-dot" id="td4"></div>
-      </div>
-    </div>
-    <div class="tips-cards">
-      <div class="tips-card">
-        <div class="tips-card-icon green">📍</div>
-        <div><div class="tips-card-label">Meeting</div><div class="tips-card-text">Always meet in a public place on or near campus.</div></div>
-      </div>
-      <div class="tips-card">
-        <div class="tips-card-icon amber">💵</div>
-        <div><div class="tips-card-label">Payment</div><div class="tips-card-text">Verify the item before handing over any money.</div></div>
-      </div>
-      <div class="tips-card">
-        <div class="tips-card-icon blue">👥</div>
-        <div><div class="tips-card-label">Safety</div><div class="tips-card-text">Bring a friend when buying expensive items.</div></div>
-      </div>
-      <div class="tips-card">
-        <div class="tips-card-icon red">⚠️</div>
-        <div><div class="tips-card-label">Scam alert</div><div class="tips-card-text">Never pay in advance without seeing the item first.</div></div>
-      </div>
-    </div>
-  </div>
-</div>
-<script>
-  (function(){
-    var tips = [
-      "Always meet in a public place like a campus cafeteria or library.",
-      "Verify the item carefully before making any payment.",
-      "Never send money in advance — pay only on delivery.",
-      "Bring a friend when buying high-value items like laptops.",
-      "Trust your instincts — if something feels off, walk away."
-    ];
-    var cur = 0;
-    var el = document.getElementById('tipText');
-    if (!el) return;
-    setInterval(function(){
-      cur = (cur + 1) % tips.length;
-      el.style.opacity = '0';
-      setTimeout(function(){
-        el.textContent = tips[cur];
-        el.style.opacity = '1';
-        for (var i = 0; i < 5; i++)
-          document.getElementById('td'+i).className = 'tips-dot' + (i === cur ? ' active' : '');
-      }, 300);
-    }, 4000);
-  })();
-</script>
+
 <footer class="footer"><p>© 2024 Student Market Palace</p></footer>
 
 <script src="js/api.js"></script>
