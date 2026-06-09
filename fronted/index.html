@@ -1,64 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Student Market Palace</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Market Palace</title>
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-    <nav>
-        <h2>🎓 Student Market Palace</h2>
-        <div>
-            <a href="index.html">Home</a>
-            <a href="auth.html">Login/Register</a>
-            <a href="dashboard.html">Dashboard</a>
-            <a href="profile.html">Profile</a>
-        </div>
-    </nav>
-    <div class="container">
-        <div style="text-align: center; margin: 3rem 0;">
-            <h1>Campus peer trust buying & selling made simple.</h1>
-            <p style="color: var(--text-muted);">Exclusively tailored for local university ecosystems.</p>
-            <div style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 0.5rem;">
-                <input type="text" id="searchInput" placeholder="Search textbooks, notes, electronics..." style="max-width: 400px;">
-                <button class="btn" onclick="performSearch()">Search</button>
-            </div>
-        </div>
-        
-        <h2>Recent Listings</h2>
-        <div class="grid" id="productsGrid"></div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-brand">🎓 Student Market Palace</div>
+  <div class="nav-links" id="navLinks">
+    <a href="index.html" class="active">Home</a>
+    <a href="products.html">Browse</a>
+    <span id="authNav">
+      <a href="login.html">Login</a>
+      <a href="register.html" class="btn-nav">Register</a>
+    </span>
+    <span id="userNav" style="display:none">
+      <a href="sell.html" class="btn-nav-sell">+ Sell Item</a>
+      <a href="profile.html" id="profileLink">My Profile</a>
+      <a href="#" onclick="logout()" class="btn-logout">Logout</a>
+    </span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <h1>Buy & Sell on Campus</h1>
+    <p>The easiest marketplace for students. Find textbooks, electronics, furniture and more.</p>
+    <div class="hero-search">
+      <input type="text" id="heroSearch" placeholder="Search for textbooks, laptops, furniture..." />
+      <button onclick="doSearch()">Search</button>
     </div>
+  </div>
+</section>
 
-    <script>
-        const API_URL = "http://127.0.0.1:8000";
+<!-- CATEGORIES -->
+<section class="categories-section">
+  <div class="container">
+    <h2>Browse by Category</h2>
+    <div class="categories-grid">
+      <div class="cat-card" onclick="browseCategory('Books')">📚<span>Books</span></div>
+      <div class="cat-card" onclick="browseCategory('Electronics')">💻<span>Electronics</span></div>
+      <div class="cat-card" onclick="browseCategory('Furniture')">🛋️<span>Furniture</span></div>
+      <div class="cat-card" onclick="browseCategory('Clothing')">👕<span>Clothing</span></div>
+      <div class="cat-card" onclick="browseCategory('Sports')">⚽<span>Sports</span></div>
+      <div class="cat-card" onclick="browseCategory('Other')">📦<span>Other</span></div>
+    </div>
+  </div>
+</section>
 
-        async function loadProducts() {
-            const res = await fetch(`${API_URL}/products`);
-            const products = await res.json();
-            const grid = document.getElementById('productsGrid');
-            grid.innerHTML = products.map(p => `
-                <div class="card">
-                    <h3>${p.title}</h3>
-                    <p style="color:var(--primary); font-weight:bold; margin: 0.5rem 0;">PKR ${p.price}</p>
-                    <p style="font-size:0.9rem; color:var(--text-muted);">${p.description.substring(0, 60)}...</p>
-                    <div style="margin-top:1rem;">
-                        <a href="product.html?id=${p.product_id}" class="btn" style="font-size:0.85rem;">View Item</a>
-                    </div>
-                </div>
-            `).join('');
-        }
+<!-- LATEST LISTINGS -->
+<section class="listings-section">
+  <div class="container">
+    <h2>Latest Listings</h2>
+    <div class="products-grid" id="latestProducts">
+      <div class="loading">Loading listings...</div>
+    </div>
+  </div>
+</section>
 
-        async function performSearch() {
-            const kw = document.getElementById('searchInput').value;
-            if(!kw) return loadProducts();
-            const res = await fetch(`${API_URL}/products/search?keyword=${kw}`);
-            const products = await res.json();
-            const grid = document.getElementById('productsGrid');
-            grid.innerHTML = products.map(p => `
-                <div class="card"><h3>${p.title}</h3><p>PKR ${p.price}</p><a href="product.html?id=${p.product_id}" class="btn">View</a></div>
-            `).join('');
-        }
-        window.onload = loadProducts;
-    </script>
+<footer class="footer">
+  <p>© 2024 Student Market Palace — OSSD Project</p>
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  checkAuthNav();
+  loadLatestProducts();
+
+  function doSearch() {
+    const kw = document.getElementById('heroSearch').value.trim();
+    if (kw) window.location.href = `products.html?search=${encodeURIComponent(kw)}`;
+  }
+  document.getElementById('heroSearch').addEventListener('keypress', e => { if(e.key==='Enter') doSearch(); });
+
+  function browseCategory(cat) {
+    window.location.href = `products.html?category=${encodeURIComponent(cat)}`;
+  }
+
+  async function loadLatestProducts() {
+    const container = document.getElementById('latestProducts');
+    try {
+      const products = await API.getProducts(0, 8);
+      if (!products.length) { container.innerHTML = '<p class="empty">No listings yet. Be the first to sell!</p>'; return; }
+      container.innerHTML = products.map(renderProductCard).join('');
+    } catch(e) {
+      container.innerHTML = '<p class="error">Could not load listings. Check your connection.</p>';
+    }
+  }
+</script>
 </body>
 </html>

@@ -23,7 +23,9 @@ class Product(Base):
     description = Column(Text, nullable=False)
     price = Column(Numeric(10, 2), nullable=False)
     category = Column(String(100), nullable=False)
+    condition = Column(String(50), nullable=False, default="Used")
     status = Column(String(20), default="available")
+    image_url = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     owner = relationship("User", back_populates="products")

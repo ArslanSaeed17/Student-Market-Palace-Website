@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 
 import models, schemas, database
 
-# Config constants for simplicity (In production, load via env vars)
+# Config constants (load via env vars in production)
 SECRET_KEY = "SUPER_SECRET_COMPLEX_PASSPHRASE_FOR_CAMPUS_MARKETPLACE_OSSD_Y9"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 120
@@ -17,7 +17,7 @@ models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(title="Student Market Palace API", version="1.0")
 
-# Allow frontend to interact across origins seamlessly
+# Allow frontend to interact across origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -28,7 +28,7 @@ app.add_middleware(
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Utility Helper Logic
+# Utility Helpers
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
@@ -41,15 +41,6 @@ def create_access_token(data: dict):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-def get_current_user(token: str = Depends(database.get_db), db: Session = Depends(database.get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    return credentials_exception
-
-# Manual override dependency extracting Bearer token explicitly from headers
 def get_user_from_header(authorization: Optional[str] = None, db: Session = Depends(database.get_db)):
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing or invalid authorization token format.")
@@ -61,14 +52,14 @@ def get_user_from_header(authorization: Optional[str] = None, db: Session = Depe
             raise HTTPException(status_code=401, detail="Invalid token payload.")
     except JWTError:
         raise HTTPException(status_code=401, detail="Token processing error or expiration encountered.")
-    
+
     user = db.query(models.User).filter(models.User.email == email).first()
     if user is None:
-        raise HTTPException(status_code=404, detail="User target not found.")
+        raise HTTPException(status_code=404, detail="User not found.")
     return user
 
 
-# --- THE 10 DEFINED API ENDPOINTS ---
+# --- API ENDPOINTS ---
 
 # 1. User Registration [Public]
 @app.post("/register", status_code=201)
@@ -76,7 +67,7 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_d
     existing_user = db.query(models.User).filter(models.User.email == user.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="An account with this student email already exists.")
-    
+
     hashed_pwd = hash_password(user.password)
     new_user = models.User(name=user.name, email=user.email, password=hashed_pwd)
     db.add(new_user)
@@ -90,72 +81,19 @@ def login_user(user_credentials: schemas.UserLogin, db: Session = Depends(databa
     user = db.query(models.User).filter(models.User.email == user_credentials.email).first()
     if not user or not verify_password(user_credentials.password, user.password):
         raise HTTPException(status_code=401, detail="Invalid Email or Password credentials provided.")
-    
+
     access_token = create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
-# 3. Create Product Listing [Protected]
-@app.post("/products", response_model=schemas.ProductResponse, status_code=201)
-def create_product(product: schemas.ProductCreate, current_user: models.User = Depends(get_user_from_header), db: Session = Depends(database.get_db)):
-    # FIXED: Clean indentation and utilizing modern .model_dump()
-    new_product = models.Product(**product.model_dump(), user_id=current_user.user_id)
-    db.add(new_product)
-    db.commit()
-    db.refresh(new_product)
-    return new_product
-
-# 4. Get All Products with Pagination [Public]
-@app.get("/products", response_model=List[schemas.ProductResponse])
-def get_products(skip: int = 0, limit: int = 20, db: Session = Depends(database.get_db)):
-    return db.query(models.Product).filter(models.Product.status == "available").offset(skip).limit(limit).all()
-
-# 5. Get Product By ID [Public]
-@app.get("/products/{id}", response_model=schemas.ProductResponse)
-def get_product_by_id(id: int, db: Session = Depends(database.get_db)):
-    product = db.query(models.Product).filter(models.Product.product_id == id).first()
-    if not product:
-        raise HTTPException(status_code=404, detail="Requested marketplace product listing does not exist.")
-    return product
-
-# 6. Update Product Listing [Protected]
-@app.put("/products/{id}", response_model=schemas.ProductResponse)
-def update_product(id: int, updated_fields: schemas.ProductUpdate, current_user: models.User = Depends(get_user_from_header), db: Session = Depends(database.get_db)):
-    product_query = db.query(models.Product).filter(models.Product.product_id == id)
-    product = product_query.first()
-    
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found.")
-    if product.user_id != current_user.user_id:
-        raise HTTPException(status_code=403, detail="Unauthorized action. You do not own this listing.")
-    
-    # FIXED: Clean indentation and utilizing modern .model_dump()
-    update_data = updated_fields.model_dump(exclude_unset=True)
-    product_query.update(update_data, synchronize_session=False)
-    db.commit()
-    return product_query.first()
-
-# 7. Delete Product Listing [Protected]
-@app.delete("/products/{id}", status_code=200)
-def delete_product(id: int, current_user: models.User = Depends(get_user_from_header), db: Session = Depends(database.get_db)):
-    product = db.query(models.Product).filter(models.Product.product_id == id).first()
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found.")
-    if product.user_id != current_user.user_id:
-        raise HTTPException(status_code=403, detail="Unauthorized action. You do not own this listing.")
-    
-    db.delete(product)
-    db.commit()
-    return {"detail": "Product listing permanently removed from marketplace."}
-
-# 8. Full-Text Search [Public]
+# 3. Full-Text Search [Public] -- MUST be before /products/{id}
 @app.get("/products/search", response_model=List[schemas.ProductResponse])
 def search_products(keyword: str, db: Session = Depends(database.get_db)):
     return db.query(models.Product).filter(
-        (models.Product.title.ilike(f"%{keyword}%")) | 
+        (models.Product.title.ilike(f"%{keyword}%")) |
         (models.Product.description.ilike(f"%{keyword}%"))
     ).all()
 
-# 9. Multi-Parameter Filter [Public]
+# 4. Multi-Parameter Filter [Public] -- MUST be before /products/{id}
 @app.get("/products/filter", response_model=List[schemas.ProductResponse])
 def filter_products(category: Optional[str] = None, status: Optional[str] = "available", db: Session = Depends(database.get_db)):
     query = db.query(models.Product)
@@ -164,6 +102,57 @@ def filter_products(category: Optional[str] = None, status: Optional[str] = "ava
     if status:
         query = query.filter(models.Product.status == status)
     return query.all()
+
+# 5. Get All Products with Pagination [Public]
+@app.get("/products", response_model=List[schemas.ProductResponse])
+def get_products(skip: int = 0, limit: int = 20, db: Session = Depends(database.get_db)):
+    return db.query(models.Product).filter(models.Product.status == "available").offset(skip).limit(limit).all()
+
+# 6. Get Product By ID [Public]
+@app.get("/products/{id}", response_model=schemas.ProductResponse)
+def get_product_by_id(id: int, db: Session = Depends(database.get_db)):
+    product = db.query(models.Product).filter(models.Product.product_id == id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Requested marketplace product listing does not exist.")
+    return product
+
+# 7. Create Product Listing [Protected]
+@app.post("/products", response_model=schemas.ProductResponse, status_code=201)
+def create_product(product: schemas.ProductCreate, current_user: models.User = Depends(get_user_from_header), db: Session = Depends(database.get_db)):
+    new_product = models.Product(**product.model_dump(), user_id=current_user.user_id)
+    db.add(new_product)
+    db.commit()
+    db.refresh(new_product)
+    return new_product
+
+# 8. Update Product Listing [Protected]
+@app.put("/products/{id}", response_model=schemas.ProductResponse)
+def update_product(id: int, updated_fields: schemas.ProductUpdate, current_user: models.User = Depends(get_user_from_header), db: Session = Depends(database.get_db)):
+    product_query = db.query(models.Product).filter(models.Product.product_id == id)
+    product = product_query.first()
+
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found.")
+    if product.user_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="Unauthorized action. You do not own this listing.")
+
+    update_data = updated_fields.model_dump(exclude_unset=True)
+    product_query.update(update_data, synchronize_session=False)
+    db.commit()
+    return product_query.first()
+
+# 9. Delete Product Listing [Protected]
+@app.delete("/products/{id}", status_code=200)
+def delete_product(id: int, current_user: models.User = Depends(get_user_from_header), db: Session = Depends(database.get_db)):
+    product = db.query(models.Product).filter(models.Product.product_id == id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found.")
+    if product.user_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="Unauthorized action. You do not own this listing.")
+
+    db.delete(product)
+    db.commit()
+    return {"detail": "Product listing permanently removed from marketplace."}
 
 # 10. Get User Profile Data [Protected]
 @app.get("/users/profile")

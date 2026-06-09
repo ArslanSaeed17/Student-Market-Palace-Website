@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sell an Item — Student Market Palace</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-brand">🎓 Student Market Palace</div>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="products.html">Browse</a>
+    <span id="authNav"><a href="login.html">Login</a><a href="register.html" class="btn-nav">Register</a></span>
+    <span id="userNav" style="display:none">
+      <a href="sell.html" class="btn-nav-sell active">+ Sell Item</a>
+      <a href="profile.html">My Profile</a>
+      <a href="#" onclick="logout()" class="btn-logout">Logout</a>
+    </span>
+  </div>
+</nav>
+
+<div class="form-page">
+  <div class="form-card">
+    <h2>📦 List an Item for Sale</h2>
+    <p class="auth-sub">Fill in the details below to post your listing</p>
+    <div id="alertBox"></div>
+    <form id="sellForm" onsubmit="handleSell(event)">
+      <div class="form-group">
+        <label>Title *</label>
+        <input type="text" id="title" placeholder="e.g. Calculus Textbook 3rd Edition" minlength="3" maxlength="100" required/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category *</label>
+          <select id="category" required>
+            <option value="">Select category</option>
+            <option>Books</option>
+            <option>Electronics</option>
+            <option>Furniture</option>
+            <option>Clothing</option>
+            <option>Sports</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Condition *</label>
+          <select id="condition" required>
+            <option value="">Select condition</option>
+            <option>New</option>
+            <option>Like New</option>
+            <option>Used</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Price (PKR) *</label>
+        <input type="number" id="price" placeholder="e.g. 500" min="1" step="1" required/>
+      </div>
+      <div class="form-group">
+        <label>Description *</label>
+        <textarea id="description" placeholder="Describe your item: condition, age, why selling..." minlength="10" maxlength="1000" rows="4" required></textarea>
+        <span class="char-count" id="descCount">0/1000</span>
+      </div>
+      <div class="form-group">
+        <label>Image URL (optional)</label>
+        <input type="url" id="image_url" placeholder="https://example.com/image.jpg"/>
+        <small>Paste a direct link to an image of your item</small>
+      </div>
+      <button type="submit" class="btn-primary" id="sellBtn">Post Listing</button>
+    </form>
+  </div>
+</div>
+
+<footer class="footer"><p>© 2024 Student Market Palace</p></footer>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  requireAuth();
+  checkAuthNav();
+
+  document.getElementById('description').addEventListener('input', function() {
+    document.getElementById('descCount').textContent = `${this.value.length}/1000`;
+  });
+
+  async function handleSell(e) {
+    e.preventDefault();
+    const btn = document.getElementById('sellBtn');
+    btn.textContent = 'Posting...'; btn.disabled = true;
+
+    const payload = {
+      title: document.getElementById('title').value,
+      category: document.getElementById('category').value,
+      condition: document.getElementById('condition').value,
+      price: parseFloat(document.getElementById('price').value),
+      description: document.getElementById('description').value,
+      image_url: document.getElementById('image_url').value || null,
+    };
+
+    try {
+      const token = localStorage.getItem('token');
+      const product = await API.createProduct(payload, token);
+      showAlert('Listing posted successfully! Redirecting...', 'success');
+      setTimeout(() => window.location.href = `product.html?id=${product.product_id}`, 1200);
+    } catch(e) {
+      showAlert(e.message || 'Failed to post listing.', 'error');
+      btn.textContent = 'Post Listing'; btn.disabled = false;
+    }
+  }
+
+  function showAlert(msg, type) {
+    document.getElementById('alertBox').innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+    window.scrollTo(0, 0);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Browse Products — Student Market Palace</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-brand">🎓 Student Market Palace</div>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="products.html" class="active">Browse</a>
+    <span id="authNav"><a href="login.html">Login</a><a href="register.html" class="btn-nav">Register</a></span>
+    <span id="userNav" style="display:none">
+      <a href="sell.html" class="btn-nav-sell">+ Sell Item</a>
+      <a href="profile.html">My Profile</a>
+      <a href="#" onclick="logout()" class="btn-logout">Logout</a>
+    </span>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="container">
+    <h1>Browse Listings</h1>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Search products..." />
+      <button onclick="applySearch()">Search</button>
+    </div>
+  </div>
+</div>
+
+<div class="container browse-layout">
+  <!-- Sidebar Filters -->
+  <aside class="filters-sidebar">
+    <h3>Filters</h3>
+    <div class="filter-group">
+      <label>Category</label>
+      <select id="filterCategory" onchange="applyFilters()">
+        <option value="">All Categories</option>
+        <option>Books</option>
+        <option>Electronics</option>
+        <option>Furniture</option>
+        <option>Clothing</option>
+        <option>Sports</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Condition</label>
+      <select id="filterCondition" onchange="applyFilters()">
+        <option value="">Any Condition</option>
+        <option>New</option>
+        <option>Like New</option>
+        <option>Used</option>
+      </select>
+    </div>
+    <button class="btn-clear" onclick="clearFilters()">Clear Filters</button>
+  </aside>
+
+  <!-- Products -->
+  <main>
+    <div class="results-info" id="resultsInfo"></div>
+    <div class="products-grid" id="productsGrid">
+      <div class="loading">Loading...</div>
+    </div>
+    <div class="pagination">
+      <button id="prevBtn" onclick="changePage(-1)" disabled>← Prev</button>
+      <span id="pageInfo">Page 1</span>
+      <button id="nextBtn" onclick="changePage(1)">Next →</button>
+    </div>
+  </main>
+</div>
+
+<footer class="footer"><p>© 2024 Student Market Palace</p></footer>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  checkAuthNav();
+  let currentPage = 0;
+  const pageSize = 12;
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.get('search')) document.getElementById('searchInput').value = params.get('search');
+  if (params.get('category')) document.getElementById('filterCategory').value = params.get('category');
+
+  loadProducts();
+
+  async function loadProducts() {
+    const grid = document.getElementById('productsGrid');
+    const info = document.getElementById('resultsInfo');
+    grid.innerHTML = '<div class="loading">Loading...</div>';
+    const keyword = document.getElementById('searchInput').value.trim();
+    const category = document.getElementById('filterCategory').value;
+    try {
+      let products;
+      if (keyword) {
+        products = await API.searchProducts(keyword);
+      } else if (category) {
+        products = await API.filterProducts(category);
+      } else {
+        products = await API.getProducts(currentPage * pageSize, pageSize);
+      }
+      info.textContent = `${products.length} listing${products.length !== 1 ? 's' : ''} found`;
+      if (!products.length) { grid.innerHTML = '<p class="empty">No products found.</p>'; return; }
+      grid.innerHTML = products.map(renderProductCard).join('');
+      document.getElementById('prevBtn').disabled = currentPage === 0;
+      document.getElementById('nextBtn').disabled = products.length < pageSize;
+      document.getElementById('pageInfo').textContent = `Page ${currentPage + 1}`;
+    } catch(e) {
+      grid.innerHTML = '<p class="error">Failed to load products.</p>';
+    }
+  }
+
+  function applySearch() { currentPage = 0; loadProducts(); }
+  function applyFilters() { currentPage = 0; loadProducts(); }
+  function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('filterCategory').value = '';
+    document.getElementById('filterCondition').value = '';
+    currentPage = 0; loadProducts();
+  }
+  function changePage(dir) { currentPage = Math.max(0, currentPage + dir); loadProducts(); }
+  document.getElementById('searchInput').addEventListener('keypress', e => { if(e.key==='Enter') applySearch(); });
+</script>
+</body>
+</html>

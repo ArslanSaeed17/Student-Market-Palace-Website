@@ -1,45 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>My Student Profile</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Profile — Student Market Palace</title>
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-    <nav>
-        <h2>🎓 Student Market Palace</h2>
-        <div><a href="index.html">Home</a><a href="dashboard.html">Dashboard</a><a href="profile.html">Profile</a></div>
-    </nav>
-    <div class="container" style="max-width: 500px; margin-top: 4rem;">
-        <div class="card">
-            <h2 style="margin-bottom:1.5rem;">Account Profile Summary</h2>
-            <div style="font-size:1.1rem; line-height:2;">
-                <p><strong>Display Name:</strong> <span id="profName">...</span></p>
-                <p><strong>Campus Email:</strong> <span id="profEmail">...</span></p>
-                <p><strong>Joined Date:</strong> <span id="profDate">...</span></p>
-            </div>
-        </div>
+<nav class="navbar">
+  <div class="nav-brand">🎓 Student Market Palace</div>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="products.html">Browse</a>
+    <span id="authNav"><a href="login.html">Login</a><a href="register.html" class="btn-nav">Register</a></span>
+    <span id="userNav" style="display:none">
+      <a href="sell.html" class="btn-nav-sell">+ Sell Item</a>
+      <a href="profile.html" class="active">My Profile</a>
+      <a href="#" onclick="logout()" class="btn-logout">Logout</a>
+    </span>
+  </div>
+</nav>
+
+<div class="container profile-page">
+  <div class="profile-header" id="profileHeader">
+    <div class="loading">Loading profile...</div>
+  </div>
+  <div class="profile-listings">
+    <h2>My Listings</h2>
+    <div class="products-grid" id="myListings">
+      <div class="loading">Loading listings...</div>
     </div>
+  </div>
+</div>
 
-    <script>
-        const API_URL = "http://127.0.0.1:8000";
-        const token = localStorage.getItem('token');
-        if(!token) window.location.href = "auth.html";
+<footer class="footer"><p>© 2024 Student Market Palace</p></footer>
 
-        async function fetchProfile() {
-            const res = await fetch(`${API_URL}/users/profile`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if(res.ok) {
-                const data = await res.json();
-                document.getElementById('profName').innerText = data.name;
-                document.getElementById('profEmail').innerText = data.email;
-                document.getElementById('profDate').innerText = new Date(data.created_at).toLocaleDateString();
-            } else {
-                window.location.href = "auth.html";
-            }
-        }
-        window.onload = fetchProfile;
-    </script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  requireAuth();
+  checkAuthNav();
+  loadProfile();
+
+  async function loadProfile() {
+    const token = localStorage.getItem('token');
+    try {
+      const profile = await API.getProfile(token);
+      document.getElementById('profileHeader').innerHTML = `
+        <div class="profile-avatar">${profile.name.charAt(0).toUpperCase()}</div>
+        <div class="profile-info">
+          <h1>${profile.name}</h1>
+          <p>📧 ${profile.email}</p>
+          <p>📅 Member since ${new Date(profile.created_at).toLocaleDateString()}</p>
+        </div>
+        <a href="sell.html" class="btn-primary">+ Post New Listing</a>`;
+
+      // Load user's listings via search (filter by user_id not available, so get all and note)
+      const allProducts = await API.getProducts(0, 100);
+      const myProducts = allProducts.filter(p => p.user_id === profile.user_id);
+      const grid = document.getElementById('myListings');
+      if (!myProducts.length) {
+        grid.innerHTML = '<p class="empty">You have no listings yet. <a href="sell.html">Post your first item!</a></p>';
+      } else {
+        grid.innerHTML = myProducts.map(p => renderProductCard(p, true)).join('');
+      }
+    } catch(e) {
+      document.getElementById('profileHeader').innerHTML = '<p class="error">Failed to load profile.</p>';
+    }
+  }
+</script>
 </body>
 </html>
