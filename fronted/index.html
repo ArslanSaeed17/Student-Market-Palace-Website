@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Market Palace</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+        <h2>🎓 Student Market Palace</h2>
+        <div>
+            <a href="index.html">Home</a>
+            <a href="auth.html">Login/Register</a>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="profile.html">Profile</a>
+        </div>
+    </nav>
+    <div class="container">
+        <div style="text-align: center; margin: 3rem 0;">
+            <h1>Campus peer trust buying & selling made simple.</h1>
+            <p style="color: var(--text-muted);">Exclusively tailored for local university ecosystems.</p>
+            <div style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 0.5rem;">
+                <input type="text" id="searchInput" placeholder="Search textbooks, notes, electronics..." style="max-width: 400px;">
+                <button class="btn" onclick="performSearch()">Search</button>
+            </div>
+        </div>
+        
+        <h2>Recent Listings</h2>
+        <div class="grid" id="productsGrid"></div>
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000";
+
+        async function loadProducts() {
+            const res = await fetch(`${API_URL}/products`);
+            const products = await res.json();
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = products.map(p => `
+                <div class="card">
+                    <h3>${p.title}</h3>
+                    <p style="color:var(--primary); font-weight:bold; margin: 0.5rem 0;">PKR ${p.price}</p>
+                    <p style="font-size:0.9rem; color:var(--text-muted);">${p.description.substring(0, 60)}...</p>
+                    <div style="margin-top:1rem;">
+                        <a href="product.html?id=${p.product_id}" class="btn" style="font-size:0.85rem;">View Item</a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function performSearch() {
+            const kw = document.getElementById('searchInput').value;
+            if(!kw) return loadProducts();
+            const res = await fetch(`${API_URL}/products/search?keyword=${kw}`);
+            const products = await res.json();
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = products.map(p => `
+                <div class="card"><h3>${p.title}</h3><p>PKR ${p.price}</p><a href="product.html?id=${p.product_id}" class="btn">View</a></div>
+            `).join('');
+        }
+        window.onload = loadProducts;
+    </script>
+</body>
+</html>

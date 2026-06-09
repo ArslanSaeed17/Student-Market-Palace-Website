@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+        <h2>🎓 Student Market Palace</h2>
+        <div><a href="index.html">Home</a><a href="dashboard.html">Dashboard</a><a href="profile.html">Profile</a><a href="#" onclick="logout()">Logout</a></div>
+    </nav>
+    <div class="container">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+            <h1>My Marketplace Dashboard</h1>
+            <button class="btn" onclick="document.getElementById('productModal').style.display='block'">+ Create New Listing</button>
+        </div>
+
+        <div id="productModal" class="card" style="display:none; max-width:500px; margin-bottom:2rem; background:#f3f4f6;">
+            <h3>New Listing Details</h3>
+            <form onsubmit="createProduct(event)">
+                <div class="form-group"><label>Title</label><input type="text" id="pTitle" required></div>
+                <div class="form-group"><label>Category</label><input type="text" id="pCat" placeholder="e.g. Books, Electronics" required></div>
+                <div class="form-group"><label>Price (PKR)</label><input type="number" id="pPrice" required></div>
+                <div class="form-group"><label>Description</label><textarea id="pDesc" required></textarea></div>
+                <button type="submit" class="btn">Publish Listing</button>
+                <button type="button" class="btn" style="background:gray;" onclick="document.getElementById('productModal').style.display='none'">Cancel</button>
+            </form>
+        </div>
+
+        <h2>Your Inventory Items</h2>
+        <div class="grid" id="userInventory"></div>
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000";
+        const token = localStorage.getItem('token');
+        if(!token) window.location.href = "auth.html";
+
+        async function loadInventory() {
+            const res = await fetch(`${API_URL}/products`);
+            const products = await res.json();
+            // Simulating parsing client side filtering based on standard access profiles safely
+            const inventory = document.getElementById('userInventory');
+            inventory.innerHTML = products.map(p => `
+                <div class="card">
+                    <h3>${p.title}</h3>
+                    <p>Price: PKR ${p.price} | Status: <strong>${p.status}</strong></p>
+                    <button class="btn" style="background:#ef4444; margin-top:1rem;" onclick="deleteListing(${p.product_id})">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        async function createProduct(e) {
+            e.preventDefault();
+            const title = document.getElementById('pTitle').value;
+            const category = document.getElementById('pCat').value;
+            const price = document.getElementById('pPrice').value;
+            const description = document.getElementById('pDesc').value;
+
+            const res = await fetch(`${API_URL}/products`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ title, category, price, description })
+            });
+            if(res.ok) { location.reload(); } else { alert("Failed creation error."); }
+        }
+
+        async function deleteListing(id) {
+            if(!confirm("Are you sure?")) return;
+            const res = await fetch(`${API_URL}/products/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if(res.ok) location.reload(); else alert("Error with requested operation.");
+        }
+
+        function logout() { localStorage.removeItem('token'); window.location.href="auth.html"; }
+        window.onload = loadInventory;
+    </script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Authentication Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+        <h2>🎓 Student Market Palace</h2>
+        <div><a href="index.html">Home</a><a href="auth.html">Login/Register</a><a href="dashboard.html">Dashboard</a><a href="profile.html">Profile</a></div>
+    </nav>
+    <div class="container" style="max-width: 500px; margin-top: 5rem;">
+        <div class="card">
+            <h2 id="authTitle" style="margin-bottom: 1.5rem;">Student Log In</h2>
+            <form id="authForm" onsubmit="handleAuth(event)">
+                <div class="form-group" id="nameGroup" style="display: none;">
+                    <label>Full Name</label>
+                    <input type="text" id="authName">
+                </div>
+                <div class="form-group">
+                    <label>University Email</label>
+                    <input type="email" id="authEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="authPassword" required>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;" id="submitBtn">Login</button>
+            </form>
+            <p style="margin-top:1rem; text-align:center; font-size:0.9rem; color:var(--text-muted)">
+                <span id="toggleText">New to the platform?</span> 
+                <a href="#" onclick="toggleMode()" id="toggleLink" style="color:var(--primary); font-weight:bold;">Create Account</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        let isLogin = true;
+        const API_URL = "http://127.0.0.1:8000";
+
+        void function toggleMode() {
+            isLogin = !isLogin;
+            document.getElementById('authTitle').innerText = isLogin ? "Student Log In" : "Register New Account";
+            document.getElementById('nameGroup').style.display = isLogin ? "none" : "block";
+            document.getElementById('submitBtn').innerText = isLogin ? "Login" : "Register";
+            document.getElementById('toggleText').innerText = isLogin ? "New to the platform?" : "Already registered?";
+            document.getElementById('toggleLink').innerText = isLogin ? "Create Account" : "Login instead";
+        }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            
+            if (!isLogin) {
+                const name = document.getElementById('authName').value;
+                const res = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+                if(res.ok) { alert("Registration successful! Logging in..."); isLogin = true; toggleMode(); }
+                else { const err = await res.json(); alert(err.detail); }
+            } else {
+                const res = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                if(res.ok) {
+                    const data = await res.json();
+                    localStorage.setItem('token', data.access_token);
+                    window.location.href = "dashboard.html";
+                } else { alert("Login failed. Validate credentials."); }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product Inspection</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+        <h2>🎓 Student Market Palace</h2>
+        <div><a href="index.html">Home</a><a href="dashboard.html">Dashboard</a></div>
+    </nav>
+    <div class="container" style="max-width: 700px;">
+        <div class="card" id="detailCard" style="margin-top: 3rem;">
+            <h2>Loading details...</h2>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000";
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        async function getDetails() {
+            if(!productId) { document.getElementById('detailCard').innerHTML = "Invalid Item."; return; }
+            const res = await fetch(`${API_URL}/products/${productId}`);
+            if(!res.ok) { document.getElementById('detailCard').innerHTML = "Product item non-existent."; return; }
+            const p = await res.json();
+            
+            document.getElementById('detailCard').innerHTML = `
+                <span style="background:#e0e7ff; color:var(--primary); padding:0.2rem 0.6rem; border-radius:20px; font-size:0.85rem;">${p.category}</span>
+                <h1 style="margin-top:0.5rem;">${p.title}</h1>
+                <p style="font-size:1.5rem; font-weight:bold; color:var(--primary); margin:1rem 0;">PKR ${p.price}</p>
+                <hr style="border:0; border-top:1px solid var(--border); margin:1rem 0;">
+                <h3>Item Description</h3>
+                <p style="color:#4b5563; margin-bottom:2rem;">${p.description}</p>
+                <button class="btn" onclick="alert('Contact details requested. Connection email sent to owner.')" style="width:100%;">Contact Student Seller</button>
+            `;
+        }
+        window.onload = getDetails;
+    </script>
+</body>
+</html>
