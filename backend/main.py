@@ -68,6 +68,9 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_d
     if existing_user:
         raise HTTPException(status_code=400, detail="An account with this student email already exists.")
 
+    if len(user.password.encode("utf-8")) > 72:
+        raise HTTPException(status_code=400, detail="Password must not exceed 72 bytes.")
+
     hashed_pwd = hash_password(user.password)
     new_user = models.User(name=user.name, email=user.email, password=hashed_pwd)
     db.add(new_user)
