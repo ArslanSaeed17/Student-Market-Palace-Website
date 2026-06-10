@@ -9,7 +9,7 @@
 <body>
 
 <nav class="navbar">
-  <div class="nav-brand">🎓 Student Market Palace</div>
+  <a class="nav-brand" href="index.html">🎓 Student Market Palace</a>
   <div class="nav-links">
     <a href="index.html">Home</a>
     <a href="products.html" class="active">Browse</a>
@@ -25,7 +25,6 @@
   </div>
 </nav>
 
-<!-- UPDATED SECTION -->
 <div class="page-header">
   <div class="page-header-inner">
     <h1>Browse Listings</h1>
@@ -40,7 +39,6 @@
   <!-- Sidebar Filters -->
   <aside class="filters-sidebar">
     <h3>Filters</h3>
-
     <div class="filter-group">
       <label>Category</label>
       <select id="filterCategory" onchange="applyFilters()">
@@ -53,7 +51,6 @@
         <option>Other</option>
       </select>
     </div>
-
     <div class="filter-group">
       <label>Condition</label>
       <select id="filterCondition" onchange="applyFilters()">
@@ -63,18 +60,15 @@
         <option>Used</option>
       </select>
     </div>
-
     <button class="btn-clear" onclick="clearFilters()">Clear Filters</button>
   </aside>
 
   <!-- Products -->
   <main>
     <div class="results-info" id="resultsInfo"></div>
-
     <div class="products-grid" id="productsGrid">
       <div class="loading">Loading...</div>
     </div>
-
     <div class="pagination">
       <button id="prevBtn" onclick="changePage(-1)" disabled>← Prev</button>
       <span id="pageInfo">Page 1</span>
@@ -87,13 +81,9 @@
 <div class="tips-banner">
   <div class="tips-banner-inner">
     <div class="tips-banner-title">Safety tips for students</div>
-
     <div class="tips-rotating">
       <span class="tips-rotating-icon">🛡️</span>
-      <span class="tips-rotating-text" id="tipText">
-        Always meet in a public place like a campus cafeteria or library.
-      </span>
-
+      <span class="tips-rotating-text" id="tipText">Always meet in a public place like a campus cafeteria or library.</span>
       <div class="tips-dots">
         <div class="tips-dot active" id="td0"></div>
         <div class="tips-dot" id="td1"></div>
@@ -102,62 +92,152 @@
         <div class="tips-dot" id="td4"></div>
       </div>
     </div>
-
     <div class="tips-cards">
-      <div class="tips-card">
-        <div class="tips-card-icon green">📍</div>
-        <div>
-          <div class="tips-card-label">Meeting</div>
-          <div class="tips-card-text">
-            Always meet in a public place on or near campus.
-          </div>
-        </div>
-      </div>
-
-      <div class="tips-card">
-        <div class="tips-card-icon amber">💵</div>
-        <div>
-          <div class="tips-card-label">Payment</div>
-          <div class="tips-card-text">
-            Verify the item before handing over any money.
-          </div>
-        </div>
-      </div>
-
-      <div class="tips-card">
-        <div class="tips-card-icon blue">👥</div>
-        <div>
-          <div class="tips-card-label">Safety</div>
-          <div class="tips-card-text">
-            Bring a friend when buying expensive items.
-          </div>
-        </div>
-      </div>
-
-      <div class="tips-card">
-        <div class="tips-card-icon red">⚠️</div>
-        <div>
-          <div class="tips-card-label">Scam Alert</div>
-          <div class="tips-card-text">
-            Never pay in advance without seeing the item first.
-          </div>
-        </div>
-      </div>
+      <div class="tips-card"><div class="tips-card-icon green">📍</div><div><div class="tips-card-label">Meeting</div><div class="tips-card-text">Always meet in a public place on or near campus.</div></div></div>
+      <div class="tips-card"><div class="tips-card-icon amber">💵</div><div><div class="tips-card-label">Payment</div><div class="tips-card-text">Verify the item before handing over any money.</div></div></div>
+      <div class="tips-card"><div class="tips-card-icon blue">👥</div><div><div class="tips-card-label">Safety</div><div class="tips-card-text">Bring a friend when buying expensive items.</div></div></div>
+      <div class="tips-card"><div class="tips-card-icon red">⚠️</div><div><div class="tips-card-label">Scam Alert</div><div class="tips-card-text">Never pay in advance without seeing the item first.</div></div></div>
     </div>
   </div>
 </div>
 
-<footer class="footer">
-  <p>© 2024 Student Market Palace</p>
-</footer>
+<div id="footerContent"></div>
 
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
-
-<!-- KEEP ALL OF YOUR EXISTING JAVASCRIPT BELOW UNCHANGED -->
 <script>
-  /* Paste the remainder of your original JavaScript exactly as it is */
-</script>
+  checkAuthNav();
+  renderFooter('footerContent');
 
+  // ── State ──────────────────────────────────────────────────
+  const PAGE_SIZE    = 12;
+  let currentPage    = 1;
+  let currentSearch  = '';
+  let currentCat     = '';
+  let currentCond    = '';
+  let allProducts    = [];   // holds full unfiltered set for client-side condition filter
+  let filteredProducts = [];
+
+  // ── Boot: read URL params ──────────────────────────────────
+  (function readParams() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('search'))   { currentSearch = params.get('search'); document.getElementById('searchInput').value = currentSearch; }
+    if (params.get('category')) { currentCat    = params.get('category'); document.getElementById('filterCategory').value = currentCat; }
+  })();
+
+  loadProducts();
+
+  // ── Load / filter / render ─────────────────────────────────
+  async function loadProducts() {
+    const grid = document.getElementById('productsGrid');
+    grid.innerHTML = '<div class="loading">Loading...</div>';
+    document.getElementById('resultsInfo').textContent = '';
+
+    try {
+      if (currentSearch) {
+        // Search endpoint
+        allProducts = await API.searchProducts(currentSearch);
+      } else if (currentCat) {
+        // Filter by category (backend)
+        allProducts = await API.filterProducts(currentCat, 'available');
+      } else {
+        // All available products — fetch enough for client-side paging
+        allProducts = await API.getProducts(0, 200);
+      }
+
+      applyConditionFilter();
+    } catch(err) {
+      grid.innerHTML = `<p class="error" style="grid-column:1/-1">❌ Could not load products. Please try again.<br><small>${err.message}</small></p>`;
+    }
+  }
+
+  function applyConditionFilter() {
+    if (currentCond) {
+      filteredProducts = allProducts.filter(p => p.condition === currentCond);
+    } else {
+      filteredProducts = [...allProducts];
+    }
+    currentPage = 1;
+    renderPage();
+  }
+
+  function renderPage() {
+    const grid    = document.getElementById('productsGrid');
+    const info    = document.getElementById('resultsInfo');
+    const total   = filteredProducts.length;
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const start  = (currentPage - 1) * PAGE_SIZE;
+    const slice  = filteredProducts.slice(start, start + PAGE_SIZE);
+
+    // Results info
+    info.textContent = total
+      ? `Showing ${start + 1}–${Math.min(start + slice.length, total)} of ${total} listing${total !== 1 ? 's' : ''}`
+      : '';
+
+    // Grid
+    if (!slice.length) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1;text-align:center;padding:60px 20px">
+          <div style="font-size:3rem;margin-bottom:16px">🔍</div>
+          <h3 style="color:var(--text);margin-bottom:8px">No listings found</h3>
+          <p style="color:var(--text3)">Try a different search or clear the filters.</p>
+          <button onclick="clearFilters()" class="btn-primary" style="width:auto;padding:10px 24px;margin-top:16px">Clear Filters</button>
+        </div>`;
+    } else {
+      grid.innerHTML = slice.map(p => renderProductCard(p)).join('');
+    }
+
+    // Pagination
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+    document.getElementById('prevBtn').disabled = currentPage <= 1;
+    document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+  }
+
+  // ── User actions ───────────────────────────────────────────
+  function applySearch() {
+    const kw = document.getElementById('searchInput').value.trim();
+    currentSearch = kw;
+    currentCat    = '';
+    currentCond   = '';
+    document.getElementById('filterCategory').value  = '';
+    document.getElementById('filterCondition').value = '';
+    loadProducts();
+  }
+
+  // Allow Enter key in search box
+  document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') applySearch();
+  });
+
+  function applyFilters() {
+    currentCat  = document.getElementById('filterCategory').value;
+    currentCond = document.getElementById('filterCondition').value;
+    currentSearch = '';
+    document.getElementById('searchInput').value = '';
+    loadProducts();
+  }
+
+  function clearFilters() {
+    currentSearch = '';
+    currentCat    = '';
+    currentCond   = '';
+    currentPage   = 1;
+    document.getElementById('searchInput').value      = '';
+    document.getElementById('filterCategory').value   = '';
+    document.getElementById('filterCondition').value  = '';
+    loadProducts();
+  }
+
+  function changePage(dir) {
+    currentPage += dir;
+    renderPage();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Safety tips rotator ────────────────────────────────────
+  if (typeof initTips === 'function') initTips();
+</script>
 </body>
 </html>
