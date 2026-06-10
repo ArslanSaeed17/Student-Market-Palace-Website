@@ -50,24 +50,9 @@
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
 <script>
-  // Only redirect if token exists AND is not expired
-  (function checkExistingToken() {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    try {
-      // JWT payload is base64 in the middle part
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload.exp && payload.exp * 1000 > Date.now()) {
-        window.location.href = 'index.html';
-      } else {
-        // Token expired — remove it so user can log in fresh
-        localStorage.removeItem('token');
-      }
-    } catch(e) {
-      // Malformed token — remove it
-      localStorage.removeItem('token');
-    }
-  })();
+  // If token exists, user is already logged in — go to home
+  if (localStorage.getItem('token')) window.location.href = 'index.html';
+  checkAuthNav();
   renderFooter('footerContent');
 
   async function handleLogin(e) {
@@ -79,6 +64,8 @@
     try {
       const data = await API.login(email, password);
       localStorage.setItem('token', data.access_token);
+      // Update navbar immediately on this page before redirect
+      checkAuthNav();
       showAlert('✅ Login successful! Redirecting…', 'success');
       setTimeout(() => window.location.href = 'index.html', 1000);
     } catch(err) {
