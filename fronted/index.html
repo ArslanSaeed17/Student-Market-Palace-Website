@@ -254,9 +254,35 @@
   }
 
   checkAuthNav();
-  initTips();
   renderFooter('footerContent');
   loadLatestProducts();
+  initTips();   // safe — defined below
+
+  // ── Safety tips rotator ──────────────────────────────────
+  const TIPS = [
+    'Always meet in a public place like a campus cafeteria or library.',
+    'Inspect the item carefully before handing over any money.',
+    'Bring a friend when buying expensive electronics or furniture.',
+    'Never pay in advance without seeing and testing the item first.',
+    'Report suspicious listings to our helpline: +92 307 9193634.',
+  ];
+  function initTips() {
+    let idx = 0;
+    const textEl = document.getElementById('tipText');
+    if (!textEl) return;
+    setInterval(() => {
+      idx = (idx + 1) % TIPS.length;
+      textEl.style.opacity = '0';
+      setTimeout(() => {
+        textEl.textContent = TIPS[idx];
+        textEl.style.opacity = '1';
+        for (let i = 0; i < TIPS.length; i++) {
+          const dot = document.getElementById('td' + i);
+          if (dot) dot.classList.toggle('active', i === idx);
+        }
+      }, 300);
+    }, 3500);
+  }
 
   function doSearch() {
     const kw = document.getElementById('heroSearch').value.trim();
