@@ -7,12 +7,16 @@
   <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
+
 <nav class="navbar">
-  <div class="nav-brand">🎓 Student Market Palace</div>
+  <a class="nav-brand" href="index.html">🎓 Student Market Palace</a>
   <div class="nav-links">
     <a href="index.html">Home</a>
     <a href="products.html">Browse</a>
-    <span id="authNav"><a href="login.html">Login</a><a href="register.html" class="btn-nav">Register</a></span>
+    <span id="authNav">
+      <a href="login.html">Login</a>
+      <a href="register.html" class="btn-nav">Register</a>
+    </span>
     <span id="userNav" style="display:none">
       <a href="sell.html" class="btn-nav-sell active">+ Sell Item</a>
       <a href="profile.html">My Profile</a>
@@ -23,96 +27,140 @@
 
 <div class="form-page">
   <div class="form-card">
-    <h2>📦 List an Item for Sale</h2>
-    <p class="auth-sub">Fill in the details below to post your listing</p>
+    <!-- Progress steps -->
+    <div class="form-steps">
+      <div class="form-step active"></div>
+      <div class="form-step active"></div>
+      <div class="form-step"></div>
+    </div>
+
+    <div class="form-card-header">
+      <h2>📦 List an Item for Sale</h2>
+      <p>Fill in the details below to post your listing on Student Market Palace</p>
+    </div>
+
     <div id="alertBox"></div>
+
     <form id="sellForm" onsubmit="handleSell(event)">
       <div class="form-group">
         <label>Title *</label>
-        <input type="text" id="title" placeholder="e.g. Calculus Textbook 3rd Edition" minlength="3" maxlength="100" required/>
+        <input type="text" id="title" placeholder="e.g. Calculus Textbook 3rd Edition"
+               minlength="3" maxlength="100" required
+               oninput="document.getElementById('titleCount').textContent=this.value.length+'/100'"/>
+        <span class="char-count" id="titleCount">0/100</span>
       </div>
+
       <div class="form-row">
         <div class="form-group">
           <label>Category *</label>
-          <select id="category" required>
+          <select id="category" required onchange="updateCategoryIcon()">
             <option value="">Select category</option>
-            <option>Books</option>
-            <option>Electronics</option>
-            <option>Furniture</option>
-            <option>Clothing</option>
-            <option>Sports</option>
-            <option>Other</option>
+            <option value="Books">📚 Books</option>
+            <option value="Electronics">💻 Electronics</option>
+            <option value="Furniture">🛋️ Furniture</option>
+            <option value="Clothing">👕 Clothing</option>
+            <option value="Sports">⚽ Sports</option>
+            <option value="Other">📦 Other</option>
           </select>
         </div>
         <div class="form-group">
           <label>Condition *</label>
           <select id="condition" required>
             <option value="">Select condition</option>
-            <option>New</option>
-            <option>Like New</option>
-            <option>Used</option>
+            <option value="New">✨ New</option>
+            <option value="Like New">👌 Like New</option>
+            <option value="Used">🔄 Used</option>
           </select>
         </div>
       </div>
+
       <div class="form-group">
         <label>Price (PKR) *</label>
         <input type="number" id="price" placeholder="e.g. 500" min="1" step="1" required/>
       </div>
+
       <div class="form-group">
         <label>Description *</label>
-        <textarea id="description" placeholder="Describe your item: condition, age, why selling..." minlength="10" maxlength="1000" rows="4" required></textarea>
+        <textarea id="description"
+          placeholder="Describe your item: condition, age, why selling, any defects…"
+          minlength="10" maxlength="1000" rows="4" required
+          oninput="document.getElementById('descCount').textContent=this.value.length+'/1000'"></textarea>
         <span class="char-count" id="descCount">0/1000</span>
       </div>
+
       <div class="form-group">
-        <label>Image URL (optional)</label>
-        <input type="url" id="image_url" placeholder="https://example.com/image.jpg"/>
-        <small>Paste a direct link to an image of your item</small>
+        <label>Image URL <span style="color:var(--text3);font-weight:400">(optional)</span></label>
+        <input type="url" id="image_url" placeholder="https://example.com/image.jpg"
+               oninput="previewImage(this.value)"/>
+        <small style="color:var(--text3);font-size:0.78rem">Paste a direct link to an image of your item</small>
+        <div class="img-preview-box" id="imgPreview" style="display:none">
+          <img id="imgPreviewEl" src="" alt="Preview"/>
+          <p style="margin-top:6px;font-size:0.78rem">Image preview</p>
+        </div>
       </div>
-      <button type="submit" class="btn-primary" id="sellBtn">Post Listing</button>
+
+      <button type="submit" class="btn-primary" id="sellBtn">🚀 Post Listing</button>
     </form>
   </div>
 </div>
 
-<footer class="footer"><p>© 2024 Student Market Palace</p></footer>
+<div id="footerContent"></div>
 
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
 <script>
   requireAuth();
   checkAuthNav();
+  renderFooter('footerContent');
 
-  document.getElementById('description').addEventListener('input', function() {
-    document.getElementById('descCount').textContent = `${this.value.length}/1000`;
-  });
+  function previewImage(url) {
+    const box = document.getElementById('imgPreview');
+    const img = document.getElementById('imgPreviewEl');
+    if (!url) { box.style.display = 'none'; return; }
+    img.src = url;
+    img.onload  = () => box.style.display = 'block';
+    img.onerror = () => box.style.display = 'none';
+  }
+
+  function updateCategoryIcon() {
+    // Just cosmetic — icons are inside option text
+  }
 
   async function handleSell(e) {
     e.preventDefault();
     const btn = document.getElementById('sellBtn');
-    btn.textContent = 'Posting...'; btn.disabled = true;
+    btn.textContent = '⏳ Posting…'; btn.disabled = true;
+
+    // Strip emoji prefix from select values
+    const rawCat  = document.getElementById('category').value;
+    const rawCond = document.getElementById('condition').value;
+    const category  = rawCat.replace(/^[^\w]*/, '').trim();
+    const condition = rawCond.replace(/^[^\w✨👌🔄]*/, '').trim();
 
     const payload = {
-      title: document.getElementById('title').value,
-      category: document.getElementById('category').value,
-      condition: document.getElementById('condition').value,
-      price: parseFloat(document.getElementById('price').value),
+      title:       document.getElementById('title').value,
+      category:    document.getElementById('category').value,
+      condition:   document.getElementById('condition').value,
+      price:       parseFloat(document.getElementById('price').value),
       description: document.getElementById('description').value,
-      image_url: document.getElementById('image_url').value || null,
+      image_url:   document.getElementById('image_url').value || null,
     };
 
     try {
-      const token = localStorage.getItem('token');
+      const token   = localStorage.getItem('token');
       const product = await API.createProduct(payload, token);
-      showAlert('Listing posted successfully! Redirecting...', 'success');
+      showAlert('✅ Listing posted successfully! Redirecting…', 'success');
       setTimeout(() => window.location.href = `product.html?id=${product.product_id}`, 1200);
-    } catch(e) {
-      showAlert(e.message || 'Failed to post listing.', 'error');
-      btn.textContent = 'Post Listing'; btn.disabled = false;
+    } catch(err) {
+      showAlert(err.message || 'Failed to post listing.', 'error');
+      btn.textContent = '🚀 Post Listing'; btn.disabled = false;
     }
   }
 
   function showAlert(msg, type) {
-    document.getElementById('alertBox').innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
-    window.scrollTo(0, 0);
+    document.getElementById('alertBox').innerHTML =
+      `<div class="alert alert-${type}">${msg}</div>`;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 </script>
 </body>
