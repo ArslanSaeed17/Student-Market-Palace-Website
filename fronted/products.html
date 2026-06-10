@@ -5,6 +5,595 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Browse Products — Student Market Palace</title>
   <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    :root {
+      --brand: #6C47FF;
+      --brand-light: #EEF0FF;
+      --brand-dark: #4A2FD6;
+      --accent: #FF6B35;
+      --surface: #FFFFFF;
+      --surface-2: #F8F7FF;
+      --surface-3: #F0EEF9;
+      --border: rgba(108,71,255,0.12);
+      --text-primary: #1A1033;
+      --text-secondary: #6B6780;
+      --text-muted: #9E9BB8;
+      --shadow-sm: 0 2px 8px rgba(108,71,255,0.08);
+      --shadow-md: 0 6px 24px rgba(108,71,255,0.13);
+      --shadow-lg: 0 16px 48px rgba(108,71,255,0.18);
+      --radius-sm: 10px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--surface-2);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+    .nav-brand {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--brand);
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s;
+    }
+    .nav-links a:hover { color: var(--brand); background: var(--brand-light); }
+    .nav-links a.active { color: var(--brand); background: var(--brand-light); }
+    .btn-nav {
+      background: var(--brand) !important;
+      color: #fff !important;
+      border-radius: var(--radius-sm) !important;
+    }
+    .btn-nav:hover { background: var(--brand-dark) !important; }
+    .btn-nav-sell {
+      background: var(--accent) !important;
+      color: #fff !important;
+      border-radius: var(--radius-sm) !important;
+    }
+    .btn-nav-sell:hover { background: #e0541f !important; }
+    .btn-logout { color: #e74c3c !important; }
+    .btn-logout:hover { background: #fef2f2 !important; color: #c0392b !important; }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      background: linear-gradient(135deg, #6C47FF 0%, #9B6DFF 50%, #FF6B35 100%);
+      padding: 3.5rem 2rem 5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .page-header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 500px;
+      height: 500px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 50%;
+    }
+    .page-header::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      left: 5%;
+      width: 300px;
+      height: 300px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 50%;
+    }
+    .page-header-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    .page-header h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.5px;
+    }
+    .page-header h1 span {
+      opacity: 0.75;
+      font-weight: 400;
+      font-size: 1.1rem;
+      display: block;
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+
+    /* ── SEARCH BAR ── */
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      max-width: 600px;
+    }
+    .search-bar input {
+      flex: 1;
+      padding: 14px 20px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 1rem;
+      background: rgba(255,255,255,0.95);
+      color: var(--text-primary);
+      outline: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      transition: box-shadow 0.2s;
+    }
+    .search-bar input:focus {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2), 0 0 0 3px rgba(255,255,255,0.3);
+    }
+    .search-bar input::placeholder { color: #a09cba; }
+    .search-bar button {
+      padding: 14px 28px;
+      background: #fff;
+      color: var(--brand);
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .search-bar button:hover {
+      background: var(--brand);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    /* ── MAIN LAYOUT ── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+    .browse-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 1.5rem;
+      padding-top: 1.5rem;
+      padding-bottom: 3rem;
+      margin-top: -2.5rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ── SIDEBAR ── */
+    .filters-sidebar {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      height: fit-content;
+      position: sticky;
+      top: 80px;
+      animation: slideInLeft 0.4s ease;
+    }
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-16px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .filters-sidebar h3 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+    }
+    .filter-group {
+      margin-bottom: 1.25rem;
+    }
+    .filter-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .filter-group select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      background: var(--surface-2);
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B6780' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
+    .filter-group select:focus { border-color: var(--brand); }
+
+    .btn-clear {
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 0.5rem;
+    }
+    .btn-clear:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: #fff5f0;
+    }
+
+    /* ── RESULTS INFO ── */
+    .results-info {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+
+    /* ── PRODUCTS GRID ── */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.25rem;
+    }
+
+    /* ── PRODUCT CARD ── */
+    .product-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.25s, box-shadow 0.25s;
+      cursor: pointer;
+      animation: cardIn 0.4s ease both;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-lg);
+    }
+    .product-card:hover .card-img img,
+    .product-card:hover .card-img-placeholder { filter: brightness(1.04); }
+
+    /* Card image */
+    .card-img {
+      width: 100%;
+      height: 180px;
+      background: var(--surface-3);
+      position: relative;
+      overflow: hidden;
+    }
+    .card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.35s;
+      display: block;
+    }
+    .product-card:hover .card-img img { transform: scale(1.06); }
+    .card-img-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--surface-3);
+      transition: background 0.2s;
+    }
+    .card-img-placeholder .ph-icon {
+      font-size: 2.2rem;
+      opacity: 0.4;
+    }
+    .card-img-placeholder .ph-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Category badge (overlaid on image) */
+    .card-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(108,71,255,0.88);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 30px;
+      letter-spacing: 0.4px;
+      backdrop-filter: blur(4px);
+    }
+    .card-condition {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 30px;
+      letter-spacing: 0.3px;
+    }
+    .condition-new { background: #d1fae5; color: #065f46; }
+    .condition-like-new { background: #dbeafe; color: #1e40af; }
+    .condition-used { background: #fef3c7; color: #92400e; }
+
+    /* Card body */
+    .card-body {
+      padding: 1rem 1.1rem 1.1rem;
+    }
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-seller {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-price {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--brand);
+    }
+    .card-price small {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 400;
+      display: block;
+      line-height: 1;
+    }
+    .card-action {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--brand-light);
+      border: none;
+      color: var(--brand);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .card-action:hover { background: var(--brand); color: #fff; transform: scale(1.1); }
+
+    /* ── LOADING SKELETON ── */
+    .loading { display: contents; }
+    .skeleton-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .skeleton-img {
+      height: 180px;
+      background: linear-gradient(90deg, var(--surface-3) 25%, #e8e6f5 50%, var(--surface-3) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .skeleton-body { padding: 1rem 1.1rem; }
+    .skeleton-line {
+      height: 12px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, var(--surface-3) 25%, #e8e6f5 50%, var(--surface-3) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      margin-bottom: 10px;
+    }
+    .skeleton-line.short { width: 60%; }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+    .empty-icon { font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.5; }
+    .empty-state h3 { font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
+    .empty-state p { font-size: 0.9rem; color: var(--text-muted); }
+
+    /* ── PAGINATION ── */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 2rem;
+    }
+    .pagination button {
+      padding: 10px 22px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--brand);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .pagination button:hover:not(:disabled) {
+      background: var(--brand);
+      color: #fff;
+      border-color: var(--brand);
+    }
+    .pagination button:disabled { opacity: 0.35; cursor: not-allowed; }
+    #pageInfo {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      min-width: 70px;
+      text-align: center;
+    }
+
+    /* ── TIPS BANNER ── */
+    .tips-banner {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 1.5rem;
+      margin-top: 1rem;
+    }
+    .tips-banner-inner { max-width: 1000px; margin: 0 auto; }
+    .tips-banner-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+    }
+    .tips-rotating {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1.5rem;
+      padding: 14px 18px;
+      background: var(--brand-light);
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(108,71,255,0.15);
+    }
+    .tips-rotating-icon { font-size: 1.3rem; }
+    .tips-rotating-text {
+      flex: 1;
+      font-size: 0.92rem;
+      color: var(--brand-dark);
+      font-weight: 500;
+    }
+    .tips-dots { display: flex; gap: 6px; }
+    .tips-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: rgba(108,71,255,0.2);
+      transition: background 0.3s;
+      cursor: pointer;
+    }
+    .tips-dot.active { background: var(--brand); }
+    .tips-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .tips-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--surface-2);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      transition: box-shadow 0.2s;
+    }
+    .tips-card:hover { box-shadow: var(--shadow-sm); }
+    .tips-card-icon {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .tips-card-icon.green { background: #d1fae5; }
+    .tips-card-icon.amber { background: #fef3c7; }
+    .tips-card-icon.blue  { background: #dbeafe; }
+    .tips-card-icon.red   { background: #fee2e2; }
+    .tips-card-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+    .tips-card-text { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4; }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .browse-layout { grid-template-columns: 1fr; }
+      .filters-sidebar { position: static; }
+      .page-header h1 { font-size: 1.8rem; }
+      .navbar { padding: 0 1rem; }
+      .nav-links a { padding: 8px 10px; }
+    }
+  </style>
 </head>
 <body>
 
@@ -25,18 +614,18 @@
   </div>
 </nav>
 
-<!-- UPDATED SECTION -->
 <div class="page-header">
   <div class="page-header-inner">
-    <h1>Browse Listings</h1>
+    <h1>Browse Listings <span>Find great deals from fellow students</span></h1>
     <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="Search products..." />
-      <button onclick="applySearch()">Search</button>
+      <input type="text" id="searchInput" placeholder="Search products, books, electronics…" />
+      <button onclick="applySearch()">🔍 Search</button>
     </div>
   </div>
 </div>
 
 <div class="container browse-layout">
+
   <!-- Sidebar Filters -->
   <aside class="filters-sidebar">
     <h3>Filters</h3>
@@ -64,15 +653,43 @@
       </select>
     </div>
 
-    <button class="btn-clear" onclick="clearFilters()">Clear Filters</button>
+    <button class="btn-clear" onclick="clearFilters()">✕ Clear Filters</button>
   </aside>
 
-  <!-- Products -->
+  <!-- Main Content -->
   <main>
     <div class="results-info" id="resultsInfo"></div>
 
     <div class="products-grid" id="productsGrid">
-      <div class="loading">Loading...</div>
+      <!-- Skeleton loading cards -->
+      <div class="skeleton-card">
+        <div class="skeleton-img"></div>
+        <div class="skeleton-body">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton-img"></div>
+        <div class="skeleton-body">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton-img"></div>
+        <div class="skeleton-body">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton-img"></div>
+        <div class="skeleton-body">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+      </div>
     </div>
 
     <div class="pagination">
@@ -83,17 +700,15 @@
   </main>
 </div>
 
-<!-- Student Tips Banner -->
+<!-- Safety Tips Banner -->
 <div class="tips-banner">
   <div class="tips-banner-inner">
     <div class="tips-banner-title">Safety tips for students</div>
-
     <div class="tips-rotating">
       <span class="tips-rotating-icon">🛡️</span>
       <span class="tips-rotating-text" id="tipText">
         Always meet in a public place like a campus cafeteria or library.
       </span>
-
       <div class="tips-dots">
         <div class="tips-dot active" id="td0"></div>
         <div class="tips-dot" id="td1"></div>
@@ -102,45 +717,33 @@
         <div class="tips-dot" id="td4"></div>
       </div>
     </div>
-
     <div class="tips-cards">
       <div class="tips-card">
         <div class="tips-card-icon green">📍</div>
         <div>
           <div class="tips-card-label">Meeting</div>
-          <div class="tips-card-text">
-            Always meet in a public place on or near campus.
-          </div>
+          <div class="tips-card-text">Always meet in a public place on or near campus.</div>
         </div>
       </div>
-
       <div class="tips-card">
         <div class="tips-card-icon amber">💵</div>
         <div>
           <div class="tips-card-label">Payment</div>
-          <div class="tips-card-text">
-            Verify the item before handing over any money.
-          </div>
+          <div class="tips-card-text">Verify the item before handing over any money.</div>
         </div>
       </div>
-
       <div class="tips-card">
         <div class="tips-card-icon blue">👥</div>
         <div>
           <div class="tips-card-label">Safety</div>
-          <div class="tips-card-text">
-            Bring a friend when buying expensive items.
-          </div>
+          <div class="tips-card-text">Bring a friend when buying expensive items.</div>
         </div>
       </div>
-
       <div class="tips-card">
         <div class="tips-card-icon red">⚠️</div>
         <div>
           <div class="tips-card-label">Scam Alert</div>
-          <div class="tips-card-text">
-            Never pay in advance without seeing the item first.
-          </div>
+          <div class="tips-card-text">Never pay in advance without seeing the item first.</div>
         </div>
       </div>
     </div>
@@ -148,15 +751,155 @@
 </div>
 
 <footer class="footer">
-  <p>© 2024 Student Market Palace</p>
+  <p>© 2024 Student Market Palace · Made with ❤️ for students</p>
 </footer>
 
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
 
-<!-- KEEP ALL OF YOUR EXISTING JAVASCRIPT BELOW UNCHANGED -->
 <script>
-  /* Paste the remainder of your original JavaScript exactly as it is */
+/* ─────────────────────────────────────────────
+   CATEGORY ICONS & CONDITION HELPERS
+───────────────────────────────────────────── */
+const CATEGORY_ICONS = {
+  'Books':       '📚',
+  'Electronics': '💻',
+  'Furniture':   '🪑',
+  'Clothing':    '👕',
+  'Sports':      '⚽',
+  'Other':       '📦',
+};
+const CONDITION_CLASSES = {
+  'New':      'condition-new',
+  'Like New': 'condition-like-new',
+  'Used':     'condition-used',
+};
+
+/* ─────────────────────────────────────────────
+   CARD RENDERER — replaces bare text "Loading..."
+   Call this wherever your existing code sets
+   innerHTML on #productsGrid.
+   
+   Expected product shape:
+   {
+     id, title, price, category, condition,
+     seller_name, image_url   (optional)
+   }
+───────────────────────────────────────────── */
+function renderProductCard(p, index) {
+  const icon       = CATEGORY_ICONS[p.category] || '📦';
+  const condClass  = CONDITION_CLASSES[p.condition] || 'condition-used';
+  const delay      = Math.min(index * 60, 400);
+
+  const imgHtml = p.image_url
+    ? `<img src="${p.image_url}" alt="${escHtml(p.title)}" loading="lazy"
+            onerror="this.parentElement.innerHTML=fallbackImg('${icon}','${escHtml(p.category)}')">`
+    : `<div class="card-img-placeholder">
+         <span class="ph-icon">${icon}</span>
+         <span class="ph-label">No photo</span>
+       </div>`;
+
+  return `
+    <a class="product-card" href="product-detail.html?id=${p.id}"
+       style="animation-delay:${delay}ms">
+      <div class="card-img">
+        ${imgHtml}
+        ${p.category ? `<span class="card-badge">${escHtml(p.category)}</span>` : ''}
+        ${p.condition ? `<span class="card-condition ${condClass}">${escHtml(p.condition)}</span>` : ''}
+      </div>
+      <div class="card-body">
+        <div class="card-title">${escHtml(p.title)}</div>
+        ${p.seller_name ? `<div class="card-seller">by ${escHtml(p.seller_name)}</div>` : ''}
+        <div class="card-footer">
+          <div class="card-price">
+            <small>Price</small>
+            Rs ${Number(p.price).toLocaleString()}
+          </div>
+          <button class="card-action" onclick="event.preventDefault();event.stopPropagation();handleWishlist(${p.id},this)" title="Save">♡</button>
+        </div>
+      </div>
+    </a>`;
+}
+
+function fallbackImg(icon, category) {
+  return `<div class="card-img-placeholder">
+    <span class="ph-icon">${icon}</span>
+    <span class="ph-label">${category}</span>
+  </div>`;
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function handleWishlist(id, btn) {
+  btn.textContent = btn.textContent === '♡' ? '♥' : '♡';
+  btn.style.color = btn.textContent === '♥' ? '#e74c3c' : '';
+}
+
+/* ─────────────────────────────────────────────
+   ROTATING TIPS
+───────────────────────────────────────────── */
+const TIPS = [
+  'Always meet in a public place like a campus cafeteria or library.',
+  'Inspect the item carefully before completing any payment.',
+  'Use campus-verified accounts when possible for extra trust.',
+  'Keep records of your conversations with sellers.',
+  'If a deal feels too good to be true — it probably is.',
+];
+let tipIndex = 0;
+function rotateTip() {
+  tipIndex = (tipIndex + 1) % TIPS.length;
+  const el = document.getElementById('tipText');
+  if (el) {
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.textContent = TIPS[tipIndex];
+      el.style.opacity = '1';
+    }, 250);
+  }
+  TIPS.forEach((_, i) => {
+    const dot = document.getElementById('td' + i);
+    if (dot) dot.classList.toggle('active', i === tipIndex);
+  });
+}
+document.querySelectorAll('.tips-dot').forEach((dot, i) => {
+  dot.addEventListener('click', () => {
+    tipIndex = i - 1;
+    rotateTip();
+  });
+});
+document.getElementById('tipText').style.transition = 'opacity 0.25s';
+setInterval(rotateTip, 4000);
+
+/* ─────────────────────────────────────────────
+   YOUR EXISTING JS — paste it exactly below.
+   The helper renderProductCard(product, index)
+   is now available globally for you to use
+   wherever you build the product list HTML.
+   
+   Minimal example integration:
+   
+   function displayProducts(products) {
+     const grid = document.getElementById('productsGrid');
+     if (!products.length) {
+       grid.innerHTML = `
+         <div class="empty-state">
+           <div class="empty-icon">🔍</div>
+           <h3>No listings found</h3>
+           <p>Try adjusting your filters or search terms.</p>
+         </div>`;
+       return;
+     }
+     grid.innerHTML = products.map((p, i) => renderProductCard(p, i)).join('');
+   }
+───────────────────────────────────────────── */
+
+/* Paste the rest of your original JS here */
+
 </script>
 
 </body>
