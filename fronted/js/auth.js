@@ -6,7 +6,23 @@ function checkAuthNav() {
   const token = localStorage.getItem('token');
   const authNav = document.getElementById('authNav');
   const userNav = document.getElementById('userNav');
+
+  // Validate token expiry before showing user nav
+  let loggedIn = false;
   if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.exp && payload.exp * 1000 > Date.now()) {
+        loggedIn = true;
+      } else {
+        localStorage.removeItem('token'); // expired — clear it
+      }
+    } catch(e) {
+      localStorage.removeItem('token'); // malformed — clear it
+    }
+  }
+
+  if (loggedIn) {
     if (authNav) authNav.style.display = 'none';
     if (userNav) userNav.style.display = 'inline-flex';
   } else {
