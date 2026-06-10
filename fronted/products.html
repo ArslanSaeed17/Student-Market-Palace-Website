@@ -898,7 +898,178 @@ setInterval(rotateTip, 4000);
    }
 ───────────────────────────────────────────── */
 
-/* Paste the rest of your original JS here */
+/* ─────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────── */
+let currentPage  = 1;
+const PAGE_SIZE  = 12;
+let currentSearch    = '';
+let currentCategory  = '';
+let currentCondition = '';
+let totalProducts    = 0;
+
+/* ─────────────────────────────────────────────
+   BOOT — fetch products when page loads
+───────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  loadProducts();
+});
+
+/* ─────────────────────────────────────────────
+   MAIN LOADER
+───────────────────────────────────────────── */
+async function loadProducts() {
+  showSkeletons();
+
+  try {
+    let products = [];
+
+    if (currentSearch) {
+      // keyword search
+      products = await API.searchProducts(currentSearch);
+    } else if (currentCategory) {
+      // category filter (API supports category filter)
+      products = await API.filterProducts(currentCategory);
+    } else {
+      // default paginated load
+      const skip = (currentPage - 1) * PAGE_SIZE;
+      products  = await API.getProducts(skip, PAGE_SIZE);
+    }
+
+    // client-side condition filter (API doesn't have a condition endpoint)
+    if (currentCondition) {
+      products = products.filter(p =>
+        (p.condition || '').toLowerCase() === currentCondition.toLowerCase()
+      );
+    }
+
+    totalProducts = products.length;
+    updateResultsInfo(totalProducts);
+    updatePagination();
+    renderGrid(products);
+
+  } catch (err) {
+    console.error('Failed to load products:', err);
+    showError();
+  }
+}
+
+/* ─────────────────────────────────────────────
+   RENDER
+───────────────────────────────────────────── */
+function renderGrid(products) {
+  const grid = document.getElementById('productsGrid');
+
+  if (!products || products.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h3>No listings found</h3>
+        <p>Try adjusting your filters or search terms.</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = products.map((p, i) => renderProductCard(p, i)).join('');
+}
+
+/* ─────────────────────────────────────────────
+   SEARCH  (called by search button & Enter key)
+───────────────────────────────────────────── */
+function applySearch() {
+  currentSearch   = document.getElementById('searchInput').value.trim();
+  currentCategory = '';
+  currentCondition = '';
+  currentPage     = 1;
+  document.getElementById('filterCategory').value  = '';
+  document.getElementById('filterCondition').value = '';
+  loadProducts();
+}
+
+// Allow pressing Enter in the search box
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') applySearch();
+});
+
+/* ─────────────────────────────────────────────
+   FILTERS
+───────────────────────────────────────────── */
+function applyFilters() {
+  currentCategory  = document.getElementById('filterCategory').value;
+  currentCondition = document.getElementById('filterCondition').value;
+  currentSearch    = '';
+  currentPage      = 1;
+  document.getElementById('searchInput').value = '';
+  loadProducts();
+}
+
+function clearFilters() {
+  currentSearch    = '';
+  currentCategory  = '';
+  currentCondition = '';
+  currentPage      = 1;
+  document.getElementById('searchInput').value     = '';
+  document.getElementById('filterCategory').value  = '';
+  document.getElementById('filterCondition').value = '';
+  loadProducts();
+}
+
+/* ─────────────────────────────────────────────
+   PAGINATION
+───────────────────────────────────────────── */
+function changePage(dir) {
+  const totalPages = Math.max(1, Math.ceil(totalProducts / PAGE_SIZE));
+  currentPage = Math.min(Math.max(1, currentPage + dir), totalPages);
+  loadProducts();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updatePagination() {
+  const totalPages = Math.max(1, Math.ceil(totalProducts / PAGE_SIZE));
+  document.getElementById('pageInfo').textContent  = `Page ${currentPage} of ${totalPages}`;
+  document.getElementById('prevBtn').disabled       = currentPage <= 1;
+  document.getElementById('nextBtn').disabled       = currentPage >= totalPages;
+}
+
+/* ─────────────────────────────────────────────
+   RESULTS INFO
+───────────────────────────────────────────── */
+function updateResultsInfo(count) {
+  const el = document.getElementById('resultsInfo');
+  if (!el) return;
+  let label = `${count} listing${count !== 1 ? 's' : ''} found`;
+  if (currentSearch)   label += ` for "<strong>${escHtml(currentSearch)}</strong>"`;
+  if (currentCategory) label += ` in <strong>${escHtml(currentCategory)}</strong>`;
+  el.innerHTML = label;
+}
+
+/* ─────────────────────────────────────────────
+   SKELETON LOADING STATE
+───────────────────────────────────────────── */
+function showSkeletons() {
+  const grid = document.getElementById('productsGrid');
+  grid.innerHTML = Array(6).fill(`
+    <div class="skeleton-card">
+      <div class="skeleton-img"></div>
+      <div class="skeleton-body">
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+      </div>
+    </div>`).join('');
+}
+
+/* ─────────────────────────────────────────────
+   ERROR STATE
+───────────────────────────────────────────── */
+function showError() {
+  const grid = document.getElementById('productsGrid');
+  grid.innerHTML = `
+    <div class="empty-state">
+      <div class="empty-icon">⚠️</div>
+      <h3>Could not load listings</h3>
+      <p>Check your connection or try again later.</p>
+    </div>`;
+}
 
 </script>
 
