@@ -1,16 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Student Market Palace</title>
+  <title>Student Market Palace — Buy &amp; Sell on Campus</title>
   <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="navbar">
-  <div class="nav-brand">🎓 Student Market Palace</div>
+  <a href="index.html" class="nav-brand">🎓 Student Market Palace</a>
   <div class="nav-links" id="navLinks">
     <a href="index.html" class="active">Home</a>
     <a href="products.html">Browse</a>
@@ -28,12 +27,27 @@
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-content">
-    <h1>Buy & Sell on Campus</h1>
-    <p>The easiest marketplace for students. Find textbooks, electronics, furniture and more.</p>
-    <div class="hero-search">
-      <input type="text" id="heroSearch" placeholder="Search for textbooks, laptops, furniture..." />
-      <button onclick="doSearch()">Search</button>
+  <div class="hero-eyebrow">🚀 Pakistan's #1 Student Marketplace</div>
+  <h1>Buy &amp; Sell on<br><span class="grad">Campus, Safely</span></h1>
+  <p>Find textbooks, electronics, furniture and more from verified students near you.</p>
+  <div class="hero-search">
+    <input type="text" id="heroSearch" placeholder="Search for textbooks, laptops, furniture…"/>
+    <button onclick="doSearch()">🔍 Search</button>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num" id="statListings">—</div>
+      <div class="hero-stat-label">Active Listings</div>
+    </div>
+    <div class="hero-stat-divider"></div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">6</div>
+      <div class="hero-stat-label">Categories</div>
+    </div>
+    <div class="hero-stat-divider"></div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">Free</div>
+      <div class="hero-stat-label">To Post &amp; Browse</div>
     </div>
   </div>
 </section>
@@ -41,7 +55,9 @@
 <!-- CATEGORIES -->
 <section class="categories-section">
   <div class="container">
-    <h2>Browse by Category</h2>
+    <div class="section-header">
+      <h2 class="section-title">Browse by <span>Category</span></h2>
+    </div>
     <div class="categories-grid">
       <div class="cat-card" onclick="browseCategory('Books')">📚<span>Books</span></div>
       <div class="cat-card" onclick="browseCategory('Electronics')">💻<span>Electronics</span></div>
@@ -56,13 +72,49 @@
 <!-- LATEST LISTINGS -->
 <section class="listings-section">
   <div class="container">
-    <h2>Latest Listings</h2>
+    <div class="section-header">
+      <h2 class="section-title">Latest <span>Listings</span></h2>
+      <a href="products.html" style="font-size:0.88rem;color:var(--purple-light);font-weight:600">View all →</a>
+    </div>
     <div class="products-grid" id="latestProducts">
-      <div class="loading">Loading listings...</div>
+      <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
+      <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
+      <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
+      <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
     </div>
   </div>
 </section>
-<!-- Student Tips Banner -->
+
+<!-- WHY US -->
+<section style="padding:64px 0;position:relative;z-index:1;background:var(--bg2);border-top:1px solid var(--border)">
+  <div class="container">
+    <h2 class="section-title" style="text-align:center;margin-bottom:40px">Why <span>Student Market Palace?</span></h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px 24px;text-align:center;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:2.2rem;margin-bottom:14px">🎓</div>
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:8px;color:var(--text)">Student-First</h3>
+        <p style="font-size:0.85rem;color:var(--text3);line-height:1.6">Built specifically for university students in Pakistan.</p>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px 24px;text-align:center;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:2.2rem;margin-bottom:14px">🛡️</div>
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:8px;color:var(--text)">Safe Transactions</h3>
+        <p style="font-size:0.85rem;color:var(--text3);line-height:1.6">Safety tips and verified campus meet-up guidelines.</p>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px 24px;text-align:center;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:2.2rem;margin-bottom:14px">💸</div>
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:8px;color:var(--text)">100% Free</h3>
+        <p style="font-size:0.85rem;color:var(--text3);line-height:1.6">No listing fees, no commissions. Post and browse for free.</p>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px 24px;text-align:center;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:2.2rem;margin-bottom:14px">💬</div>
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:8px;color:var(--text)">WhatsApp &amp; Email</h3>
+        <p style="font-size:0.85rem;color:var(--text3);line-height:1.6">Contact sellers instantly via WhatsApp or Gmail.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIPS BANNER -->
 <div class="tips-banner">
   <div class="tips-banner-inner">
     <div class="tips-banner-title">Safety tips for students</div>
@@ -78,64 +130,29 @@
       </div>
     </div>
     <div class="tips-cards">
-      <div class="tips-card">
-        <div class="tips-card-icon green">📍</div>
-        <div><div class="tips-card-label">Meeting</div><div class="tips-card-text">Always meet in a public place on or near campus.</div></div>
-      </div>
-      <div class="tips-card">
-        <div class="tips-card-icon amber">💵</div>
-        <div><div class="tips-card-label">Payment</div><div class="tips-card-text">Verify the item before handing over any money.</div></div>
-      </div>
-      <div class="tips-card">
-        <div class="tips-card-icon blue">👥</div>
-        <div><div class="tips-card-label">Safety</div><div class="tips-card-text">Bring a friend when buying expensive items.</div></div>
-      </div>
-      <div class="tips-card">
-        <div class="tips-card-icon red">⚠️</div>
-        <div><div class="tips-card-label">Scam alert</div><div class="tips-card-text">Never pay in advance without seeing the item first.</div></div>
-      </div>
+      <div class="tips-card"><div class="tips-card-icon green">📍</div><div><div class="tips-card-label">Meeting</div><div class="tips-card-text">Always meet in a public place on or near campus.</div></div></div>
+      <div class="tips-card"><div class="tips-card-icon amber">💵</div><div><div class="tips-card-label">Payment</div><div class="tips-card-text">Verify the item before handing over any money.</div></div></div>
+      <div class="tips-card"><div class="tips-card-icon blue">👥</div><div><div class="tips-card-label">Safety</div><div class="tips-card-text">Bring a friend when buying expensive items.</div></div></div>
+      <div class="tips-card"><div class="tips-card-icon red">⚠️</div><div><div class="tips-card-label">Scam Alert</div><div class="tips-card-text">Never pay in advance without seeing the item first.</div></div></div>
     </div>
   </div>
 </div>
-<script>
-  (function(){
-    var tips = [
-      "Always meet in a public place like a campus cafeteria or library.",
-      "Verify the item carefully before making any payment.",
-      "Never send money in advance — pay only on delivery.",
-      "Bring a friend when buying high-value items like laptops.",
-      "Trust your instincts — if something feels off, walk away."
-    ];
-    var cur = 0;
-    var el = document.getElementById('tipText');
-    if (!el) return;
-    setInterval(function(){
-      cur = (cur + 1) % tips.length;
-      el.style.opacity = '0';
-      setTimeout(function(){
-        el.textContent = tips[cur];
-        el.style.opacity = '1';
-        for (var i = 0; i < 5; i++)
-          document.getElementById('td'+i).className = 'tips-dot' + (i === cur ? ' active' : '');
-      }, 300);
-    }, 4000);
-  })();
-</script>
-<footer class="footer">
-  <p>© 2024 Student Market Palace — OSSD Project</p>
-</footer>
+
+<footer class="footer"><div id="footerContent"></div></footer>
 
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
 <script>
   checkAuthNav();
+  initTips();
+  renderFooter('footerContent');
   loadLatestProducts();
 
   function doSearch() {
     const kw = document.getElementById('heroSearch').value.trim();
     if (kw) window.location.href = `products.html?search=${encodeURIComponent(kw)}`;
   }
-  document.getElementById('heroSearch').addEventListener('keypress', e => { if(e.key==='Enter') doSearch(); });
+  document.getElementById('heroSearch').addEventListener('keypress', e => { if (e.key === 'Enter') doSearch(); });
 
   function browseCategory(cat) {
     window.location.href = `products.html?category=${encodeURIComponent(cat)}`;
@@ -145,7 +162,11 @@
     const container = document.getElementById('latestProducts');
     try {
       const products = await API.getProducts(0, 8);
-      if (!products.length) { container.innerHTML = '<p class="empty">No listings yet. Be the first to sell!</p>'; return; }
+      document.getElementById('statListings').textContent = products.length;
+      if (!products.length) {
+        container.innerHTML = '<p class="empty">No listings yet. Be the first to sell!</p>';
+        return;
+      }
       container.innerHTML = products.map(renderProductCard).join('');
     } catch(e) {
       container.innerHTML = '<p class="error">Could not load listings. Check your connection.</p>';
