@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Profile — Student Market Palace</title>
+  <title>Register — Student Market Palace</title>
   <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
@@ -13,226 +13,117 @@
   <div class="nav-links">
     <a href="index.html">Home</a>
     <a href="products.html">Browse</a>
-    <span id="authNav">
-      <a href="login.html">Login</a>
-      <a href="register.html" class="btn-nav">Register</a>
-    </span>
-    <span id="userNav" style="display:none">
-      <a href="sell.html" class="btn-nav-sell">+ Sell Item</a>
-      <a href="profile.html" class="active">My Profile</a>
-      <a href="#" onclick="logout()" class="btn-logout">Logout</a>
-    </span>
+    <a href="login.html">Login</a>
+    <a href="register.html" class="btn-nav active">Register</a>
   </div>
 </nav>
 
-<div class="container profile-page">
-
-  <!-- Profile banner -->
-  <div class="profile-banner" id="profileBanner">
-    <div class="loading">⏳ Loading profile…</div>
-  </div>
-
-  <!-- Tabs -->
-  <div class="profile-tabs" id="profileTabs" style="display:none">
-    <button class="tab-btn active" onclick="switchTab('listings', this)">📦 My Listings</button>
-    <button class="tab-btn" onclick="switchTab('account', this)">⚙️ Account Info</button>
-  </div>
-
-  <!-- Listings tab -->
-  <div id="tabListings">
-    <!-- Status filter pills -->
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-      <div style="display:flex;gap:8px;flex-wrap:wrap" id="statusPills">
-        <button class="pill-btn active" onclick="filterListings('all', this)">All</button>
-        <button class="pill-btn" onclick="filterListings('available', this)">Available</button>
-        <button class="pill-btn" onclick="filterListings('reserved', this)">Reserved</button>
-        <button class="pill-btn" onclick="filterListings('sold', this)">Sold</button>
+<div class="auth-page">
+  <div class="auth-card">
+    <span class="auth-icon">🎓</span>
+    <h2>Create Account</h2>
+    <p class="auth-sub">Join Student Market Palace — buy &amp; sell on campus</p>
+    <div id="alertBox"></div>
+    <form id="registerForm" onsubmit="handleRegister(event)">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="name" placeholder="Your full name" minlength="2" required/>
       </div>
-      <a href="sell.html" class="btn-primary" style="width:auto;padding:10px 20px;font-size:0.88rem">+ New Listing</a>
-    </div>
-    <div class="products-grid" id="myListings">
-      <div class="loading">⏳ Loading listings…</div>
-    </div>
-  </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="student@university.edu" required/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Min 6 characters" minlength="6" required/>
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" id="confirmPassword" placeholder="Repeat password" required/>
+      </div>
 
-  <!-- Account tab -->
-  <div id="tabAccount" style="display:none">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;max-width:540px">
-      <h2 style="font-size:1.15rem;font-weight:700;margin-bottom:24px;color:var(--text)">⚙️ Account Details</h2>
-      <div id="accountDetails" style="display:flex;flex-direction:column;gap:18px;color:var(--text2);font-size:0.92rem"></div>
-      <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border)">
-        <p style="font-size:0.82rem;color:var(--text3);margin-bottom:14px">Need help with your account?</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <a href="https://wa.me/923008971489" target="_blank"
-             style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:rgba(37,211,102,0.12);color:#6ee7b7;border:1px solid rgba(37,211,102,0.25);border-radius:8px;font-size:0.82rem;font-weight:600">
-            💬 WhatsApp Support
-          </a>
-          <a href="mailto:arslanbrall@gmail.com"
-             style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--purple-dim);color:var(--purple-light);border:1px solid var(--border2);border-radius:8px;font-size:0.82rem;font-weight:600">
-            📧 Email Support
-          </a>
+      <!-- Password strength bar -->
+      <div style="margin:-8px 0 16px">
+        <div style="height:4px;border-radius:4px;background:var(--bg3);overflow:hidden">
+          <div id="strengthBar" style="height:100%;width:0%;border-radius:4px;transition:width 0.3s,background 0.3s"></div>
         </div>
+        <div id="strengthLabel" style="font-size:0.74rem;color:var(--text3);margin-top:4px"></div>
       </div>
+
+      <button type="submit" class="btn-primary" id="registerBtn">Create Account →</button>
+    </form>
+    <p class="auth-link">Already have an account? <a href="login.html">Login here</a></p>
+    <div style="margin-top:20px;padding:14px 16px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);font-size:0.8rem;color:var(--text3);line-height:1.6">
+      By registering you agree to our
+      <a href="index.html#terms" style="color:var(--purple-light)">Terms of Service</a>.
+      This platform is exclusively for UMT students.
     </div>
   </div>
-
 </div>
 
 <div id="footerContent"></div>
 
-<style>
-  .pill-btn {
-    padding: 6px 16px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text2);
-    font-size: 0.82rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .pill-btn.active, .pill-btn:hover {
-    background: var(--purple);
-    color: #fff;
-    border-color: var(--purple);
-  }
-</style>
-
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
 <script>
-  requireAuth();
-  checkAuthNav();
+  // If already logged in, go to home
+  if (localStorage.getItem('token')) window.location.href = 'index.html';
+
   renderFooter('footerContent');
 
-  let profileData = null;
-  let allMyListings = [];   // ALL statuses
-  let activeFilter  = 'all';
+  // Password strength meter
+  document.getElementById('password').addEventListener('input', function() {
+    const v = this.value;
+    const bar = document.getElementById('strengthBar');
+    const lbl = document.getElementById('strengthLabel');
+    let score = 0;
+    if (v.length >= 6)  score++;
+    if (v.length >= 10) score++;
+    if (/[A-Z]/.test(v)) score++;
+    if (/[0-9]/.test(v)) score++;
+    if (/[^A-Za-z0-9]/.test(v)) score++;
+    const levels = [
+      { w:'0%',   c:'transparent', t:'' },
+      { w:'25%',  c:'#ef4444',     t:'Weak' },
+      { w:'50%',  c:'#f59e0b',     t:'Fair' },
+      { w:'75%',  c:'#06b6d4',     t:'Good' },
+      { w:'100%', c:'#10b981',     t:'Strong 💪' },
+    ];
+    const l = levels[Math.min(score, 4)];
+    bar.style.width = l.w; bar.style.background = l.c;
+    lbl.textContent = l.t; lbl.style.color = l.c;
+  });
 
-  loadProfile();
+  async function handleRegister(e) {
+    e.preventDefault();
+    const btn      = document.getElementById('registerBtn');
+    const name     = document.getElementById('name').value.trim();
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirm  = document.getElementById('confirmPassword').value;
 
-  async function loadProfile() {
-    const token = localStorage.getItem('token');
+    if (password !== confirm) {
+      showAlert('Passwords do not match.', 'error');
+      return;
+    }
+
+    btn.textContent = 'Creating account…';
+    btn.disabled    = true;
+
     try {
-      profileData = await API.getProfile(token);
-
-      // ── FIX: Fetch ALL products (skip=0, limit=500) then filter by user_id
-      //    This gets available + reserved + sold because the profile endpoint
-      //    needs all statuses. For a proper fix a /users/me/products endpoint
-      //    would be ideal, but this works with the current backend.
-      const available = await API.getProducts(0, 500);
-
-      // Also try to get reserved/sold via filter endpoint
-      let reserved = [], sold = [];
-      try { reserved = await API.filterProducts('', 'reserved'); } catch(e) {}
-      try { sold     = await API.filterProducts('', 'sold');     } catch(e) {}
-
-      // Combine and de-duplicate by product_id
-      const seen = new Set();
-      const combined = [...available, ...reserved, ...sold].filter(p => {
-        if (seen.has(p.product_id)) return false;
-        seen.add(p.product_id);
-        return true;
-      });
-
-      // Keep only this user's listings
-      allMyListings = combined.filter(p => p.user_id === profileData.user_id);
-
-      const activeCount   = allMyListings.filter(p => p.status === 'available').length;
-      const reservedCount = allMyListings.filter(p => p.status === 'reserved').length;
-      const soldCount     = allMyListings.filter(p => p.status === 'sold').length;
-
-      const initial = profileData.name.charAt(0).toUpperCase();
-      const joined  = new Date(profileData.created_at).toLocaleDateString('en-US', { year:'numeric', month:'long' });
-
-      document.getElementById('profileBanner').innerHTML = `
-        <div class="profile-top">
-          <div class="profile-avatar">${initial}</div>
-          <div class="profile-info">
-            <h1>${profileData.name}</h1>
-            <p>📧 ${profileData.email}</p>
-            <p>📅 Member since ${joined}</p>
-          </div>
-          <div class="profile-actions">
-            <a href="sell.html" class="btn-primary">+ Post New Listing</a>
-          </div>
-        </div>
-        <div class="profile-stats">
-          <div class="stat-card">
-            <div class="stat-num">${allMyListings.length}</div>
-            <div class="stat-label">Total Listings</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-num">${activeCount}</div>
-            <div class="stat-label">Active</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-num">${reservedCount}</div>
-            <div class="stat-label">Reserved</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-num">${soldCount}</div>
-            <div class="stat-label">Sold</div>
-          </div>
-        </div>`;
-
-      document.getElementById('profileTabs').style.display = 'flex';
-      renderListings('all');
-
-      // Account details
-      document.getElementById('accountDetails').innerHTML = `
-        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
-          <span style="color:var(--text3)">Full Name</span><span>${profileData.name}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
-          <span style="color:var(--text3)">Email</span><span>${profileData.email}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
-          <span style="color:var(--text3)">Member Since</span><span>${joined}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding:12px 0">
-          <span style="color:var(--text3)">Account Status</span>
-          <span style="color:var(--green);font-weight:600">✅ Active</span>
-        </div>`;
-
+      await API.register(name, email, password);
+      showAlert('✅ Account created! Redirecting to login…', 'success');
+      setTimeout(() => window.location.href = 'login.html', 1500);
     } catch(err) {
-      document.getElementById('profileBanner').innerHTML =
-        '<p class="error">Failed to load profile. Please log in again. <a href="login.html">Login</a></p>';
+      showAlert(err.message || 'Registration failed. Try again.', 'error');
+      btn.textContent = 'Create Account →';
+      btn.disabled    = false;
     }
   }
 
-  function filterListings(status, btn) {
-    activeFilter = status;
-    document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    renderListings(status);
-  }
-
-  function renderListings(status) {
-    const grid = document.getElementById('myListings');
-    const list = status === 'all'
-      ? allMyListings
-      : allMyListings.filter(p => p.status === status);
-
-    if (!list.length) {
-      const labels = { all: "No listings yet.", available: "No available listings.", reserved: "No reserved listings.", sold: "No sold listings." };
-      grid.innerHTML = `
-        <div class="empty-state" style="grid-column:1/-1;text-align:center;padding:48px 20px">
-          <div class="empty-icon">📭</div>
-          <h3>${labels[status] || 'No listings.'}</h3>
-          ${status === 'all' ? '<a href="sell.html" class="btn-primary" style="width:auto;padding:11px 22px;margin-top:16px;display:inline-block">+ Post Your First Item</a>' : ''}
-        </div>`;
-    } else {
-      grid.innerHTML = list.map(p => renderProductCard(p, true)).join('');
-    }
-  }
-
-  function switchTab(tab, btn) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    document.getElementById('tabListings').style.display = tab === 'listings' ? 'block' : 'none';
-    document.getElementById('tabAccount').style.display  = tab === 'account'  ? 'block' : 'none';
+  function showAlert(msg, type) {
+    document.getElementById('alertBox').innerHTML =
+      `<div class="alert alert-${type}">${msg}</div>`;
   }
 </script>
 </body>
