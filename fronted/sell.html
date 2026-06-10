@@ -27,7 +27,6 @@
 
 <div class="form-page">
   <div class="form-card">
-    <!-- Progress steps -->
     <div class="form-steps">
       <div class="form-step active"></div>
       <div class="form-step active"></div>
@@ -53,7 +52,7 @@
       <div class="form-row">
         <div class="form-group">
           <label>Category *</label>
-          <select id="category" required onchange="updateCategoryIcon()">
+          <select id="category" required>
             <option value="">Select category</option>
             <option value="Books">📚 Books</option>
             <option value="Electronics">💻 Electronics</option>
@@ -122,28 +121,20 @@
     img.onerror = () => box.style.display = 'none';
   }
 
-  function updateCategoryIcon() {
-    // Just cosmetic — icons are inside option text
-  }
-
   async function handleSell(e) {
     e.preventDefault();
     const btn = document.getElementById('sellBtn');
     btn.textContent = '⏳ Posting…'; btn.disabled = true;
 
-    // Strip emoji prefix from select values
-    const rawCat  = document.getElementById('category').value;
-    const rawCond = document.getElementById('condition').value;
-    const category  = rawCat.replace(/^[^\w]*/, '').trim();
-    const condition = rawCond.replace(/^[^\w✨👌🔄]*/, '').trim();
-
+    // ── FIX: Use the select's value attribute directly (already clean, e.g. "Books")
+    //    The <option value="Books"> means .value gives "Books" — no emoji stripping needed.
     const payload = {
-      title:       document.getElementById('title').value,
-      category:    document.getElementById('category').value,
-      condition:   document.getElementById('condition').value,
+      title:       document.getElementById('title').value.trim(),
+      category:    document.getElementById('category').value,      // "Books", "Electronics" etc.
+      condition:   document.getElementById('condition').value,     // "New", "Like New", "Used"
       price:       parseFloat(document.getElementById('price').value),
-      description: document.getElementById('description').value,
-      image_url:   document.getElementById('image_url').value || null,
+      description: document.getElementById('description').value.trim(),
+      image_url:   document.getElementById('image_url').value.trim() || null,
     };
 
     try {
