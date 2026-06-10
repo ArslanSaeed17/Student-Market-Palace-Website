@@ -7,8 +7,9 @@
   <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
+
 <nav class="navbar">
-  <div class="nav-brand">🎓 Student Market Palace</div>
+  <a class="nav-brand" href="index.html">🎓 Student Market Palace</a>
   <div class="nav-links">
     <a href="index.html">Home</a>
     <a href="products.html">Browse</a>
@@ -19,8 +20,9 @@
 
 <div class="auth-page">
   <div class="auth-card">
+    <span class="auth-icon">🎓</span>
     <h2>Create Account</h2>
-    <p class="auth-sub">Join the student marketplace today</p>
+    <p class="auth-sub">Join Student Market Palace — buy &amp; sell on campus</p>
     <div id="alertBox"></div>
     <form id="registerForm" onsubmit="handleRegister(event)">
       <div class="form-group">
@@ -39,40 +41,82 @@
         <label>Confirm Password</label>
         <input type="password" id="confirmPassword" placeholder="Repeat password" required/>
       </div>
-      <button type="submit" class="btn-primary" id="registerBtn">Create Account</button>
+
+      <!-- Password strength bar -->
+      <div style="margin:-8px 0 16px">
+        <div style="height:4px;border-radius:4px;background:var(--bg3);overflow:hidden">
+          <div id="strengthBar" style="height:100%;width:0%;border-radius:4px;transition:width 0.3s,background 0.3s"></div>
+        </div>
+        <div id="strengthLabel" style="font-size:0.74rem;color:var(--text3);margin-top:4px"></div>
+      </div>
+
+      <button type="submit" class="btn-primary" id="registerBtn">Create Account →</button>
     </form>
     <p class="auth-link">Already have an account? <a href="login.html">Login here</a></p>
+
+    <div style="margin-top:20px;padding:14px 16px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);font-size:0.8rem;color:var(--text3);line-height:1.6">
+      By registering you agree to our
+      <a href="index.html#terms" style="color:var(--purple-light)">Terms of Service</a>.
+      This platform is exclusively for UMT students.
+    </div>
   </div>
 </div>
+
+<div id="footerContent"></div>
 
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
 <script>
   if (localStorage.getItem('token')) window.location.href = 'index.html';
+  renderFooter('footerContent');
+
+  // Password strength
+  document.getElementById('password').addEventListener('input', function() {
+    const v = this.value;
+    const bar = document.getElementById('strengthBar');
+    const lbl = document.getElementById('strengthLabel');
+    let score = 0;
+    if (v.length >= 6) score++;
+    if (v.length >= 10) score++;
+    if (/[A-Z]/.test(v)) score++;
+    if (/[0-9]/.test(v)) score++;
+    if (/[^A-Za-z0-9]/.test(v)) score++;
+    const levels = [
+      { w: '0%',   c: 'transparent', t: '' },
+      { w: '25%',  c: '#ef4444',     t: 'Weak' },
+      { w: '50%',  c: '#f59e0b',     t: 'Fair' },
+      { w: '75%',  c: '#06b6d4',     t: 'Good' },
+      { w: '100%', c: '#10b981',     t: 'Strong 💪' },
+    ];
+    const l = levels[Math.min(score, 4)];
+    bar.style.width = l.w; bar.style.background = l.c;
+    lbl.textContent = l.t; lbl.style.color = l.c;
+  });
 
   async function handleRegister(e) {
     e.preventDefault();
-    const btn = document.getElementById('registerBtn');
-    const name = document.getElementById('name').value;
-    const email = document.getElementById('email').value;
+    const btn      = document.getElementById('registerBtn');
+    const name     = document.getElementById('name').value;
+    const email    = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    const confirm = document.getElementById('confirmPassword').value;
+    const confirm  = document.getElementById('confirmPassword').value;
 
     if (password !== confirm) { showAlert('Passwords do not match.', 'error'); return; }
 
-    btn.textContent = 'Creating account...'; btn.disabled = true;
+    btn.textContent = 'Creating account…'; btn.disabled = true;
     try {
       await API.register(name, email, password);
-      showAlert('Account created! Redirecting to login...', 'success');
+      showAlert('✅ Account created! Redirecting to login…', 'success');
       setTimeout(() => window.location.href = 'login.html', 1500);
-    } catch(e) {
-      showAlert(e.message || 'Registration failed. Try again.', 'error');
-      btn.textContent = 'Create Account'; btn.disabled = false;
+    } catch(err) {
+      showAlert(err.message || 'Registration failed. Try again.', 'error');
+      btn.textContent = 'Create Account →'; btn.disabled = false;
     }
   }
 
   function showAlert(msg, type) {
-    document.getElementById('alertBox').innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+    document.getElementById('alertBox').innerHTML =
+      `<div class="alert alert-${type}">${msg}</div>`;
   }
 </script>
 </body>
