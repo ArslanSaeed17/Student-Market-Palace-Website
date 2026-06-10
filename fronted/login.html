@@ -7,8 +7,9 @@
   <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
+
 <nav class="navbar">
-  <div class="nav-brand">🎓 Student Market Palace</div>
+  <a class="nav-brand" href="index.html">🎓 Student Market Palace</a>
   <div class="nav-links">
     <a href="index.html">Home</a>
     <a href="products.html">Browse</a>
@@ -19,8 +20,9 @@
 
 <div class="auth-page">
   <div class="auth-card">
+    <span class="auth-icon">🔐</span>
     <h2>Welcome Back</h2>
-    <p class="auth-sub">Login to your student account</p>
+    <p class="auth-sub">Login to your Student Market Palace account</p>
     <div id="alertBox"></div>
     <form id="loginForm" onsubmit="handleLogin(event)">
       <div class="form-group">
@@ -31,37 +33,46 @@
         <label>Password</label>
         <input type="password" id="password" placeholder="Your password" required/>
       </div>
-      <button type="submit" class="btn-primary" id="loginBtn">Login</button>
+      <button type="submit" class="btn-primary" id="loginBtn">Login →</button>
     </form>
     <p class="auth-link">Don't have an account? <a href="register.html">Register here</a></p>
+
+    <div class="auth-divider"><span></span><p>Need help?</p><span></span></div>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:0.82rem;color:var(--text3);text-align:center">
+      <a href="https://wa.me/923008971489" target="_blank" style="color:var(--green)">💬 WhatsApp Support: +92 300 8971489</a>
+      <a href="mailto:arslanbrall@gmail.com" style="color:var(--purple-light)">📧 arslanbrall@gmail.com</a>
+    </div>
   </div>
 </div>
+
+<div id="footerContent"></div>
 
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
 <script>
   if (localStorage.getItem('token')) window.location.href = 'index.html';
+  renderFooter('footerContent');
 
   async function handleLogin(e) {
     e.preventDefault();
     const btn = document.getElementById('loginBtn');
-    btn.textContent = 'Logging in...'; btn.disabled = true;
-    const email = document.getElementById('email').value;
+    btn.textContent = 'Logging in…'; btn.disabled = true;
+    const email    = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     try {
       const data = await API.login(email, password);
       localStorage.setItem('token', data.access_token);
-      showAlert('Login successful! Redirecting...', 'success');
+      showAlert('✅ Login successful! Redirecting…', 'success');
       setTimeout(() => window.location.href = 'index.html', 1000);
-    } catch(e) {
-      showAlert(e.message || 'Invalid email or password.', 'error');
-      btn.textContent = 'Login'; btn.disabled = false;
+    } catch(err) {
+      showAlert(err.message || 'Invalid email or password.', 'error');
+      btn.textContent = 'Login →'; btn.disabled = false;
     }
   }
 
   function showAlert(msg, type) {
-    const box = document.getElementById('alertBox');
-    box.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+    document.getElementById('alertBox').innerHTML =
+      `<div class="alert alert-${type}">${msg}</div>`;
   }
 </script>
 </body>
