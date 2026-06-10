@@ -7,12 +7,16 @@
   <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
+
 <nav class="navbar">
-  <div class="nav-brand">🎓 Student Market Palace</div>
+  <a class="nav-brand" href="index.html">🎓 Student Market Palace</a>
   <div class="nav-links">
     <a href="index.html">Home</a>
     <a href="products.html">Browse</a>
-    <span id="authNav"><a href="login.html">Login</a><a href="register.html" class="btn-nav">Register</a></span>
+    <span id="authNav">
+      <a href="login.html">Login</a>
+      <a href="register.html" class="btn-nav">Register</a>
+    </span>
     <span id="userNav" style="display:none">
       <a href="sell.html" class="btn-nav-sell">+ Sell Item</a>
       <a href="profile.html" class="active">My Profile</a>
@@ -22,51 +26,154 @@
 </nav>
 
 <div class="container profile-page">
-  <div class="profile-header" id="profileHeader">
-    <div class="loading">Loading profile...</div>
+
+  <!-- Profile banner -->
+  <div class="profile-banner" id="profileBanner">
+    <div class="loading">⏳ Loading profile…</div>
   </div>
-  <div class="profile-listings">
-    <h2>My Listings</h2>
+
+  <!-- Tabs -->
+  <div class="profile-tabs" id="profileTabs" style="display:none">
+    <button class="tab-btn active" onclick="switchTab('listings')">📦 My Listings</button>
+    <button class="tab-btn" onclick="switchTab('account')">⚙️ Account Info</button>
+  </div>
+
+  <!-- Listings tab -->
+  <div id="tabListings">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h2 style="font-size:1.15rem;font-weight:700;color:var(--text)">My Listings</h2>
+      <a href="sell.html" class="btn-primary" style="width:auto;padding:10px 20px;font-size:0.88rem">+ New Listing</a>
+    </div>
     <div class="products-grid" id="myListings">
-      <div class="loading">Loading listings...</div>
+      <div class="loading">⏳ Loading listings…</div>
     </div>
   </div>
+
+  <!-- Account tab -->
+  <div id="tabAccount" style="display:none">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;max-width:540px">
+      <h2 style="font-size:1.15rem;font-weight:700;margin-bottom:24px;color:var(--text)">⚙️ Account Details</h2>
+      <div id="accountDetails" style="display:flex;flex-direction:column;gap:18px;color:var(--text2);font-size:0.92rem"></div>
+      <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border)">
+        <p style="font-size:0.82rem;color:var(--text3);margin-bottom:14px">Need help with your account?</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a href="https://wa.me/923008971489" target="_blank"
+             style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:rgba(37,211,102,0.12);color:#6ee7b7;border:1px solid rgba(37,211,102,0.25);border-radius:8px;font-size:0.82rem;font-weight:600">
+            💬 WhatsApp Support
+          </a>
+          <a href="mailto:arslanbrall@gmail.com"
+             style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--purple-dim);color:var(--purple-light);border:1px solid var(--border2);border-radius:8px;font-size:0.82rem;font-weight:600">
+            📧 Email Support
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<footer class="footer"><p>© 2024 Student Market Palace</p></footer>
+<div id="footerContent"></div>
 
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
 <script>
   requireAuth();
   checkAuthNav();
+  renderFooter('footerContent');
+
+  let profileData = null;
+
   loadProfile();
 
   async function loadProfile() {
     const token = localStorage.getItem('token');
     try {
-      const profile = await API.getProfile(token);
-      document.getElementById('profileHeader').innerHTML = `
-        <div class="profile-avatar">${profile.name.charAt(0).toUpperCase()}</div>
-        <div class="profile-info">
-          <h1>${profile.name}</h1>
-          <p>📧 ${profile.email}</p>
-          <p>📅 Member since ${new Date(profile.created_at).toLocaleDateString()}</p>
-        </div>
-        <a href="sell.html" class="btn-primary">+ Post New Listing</a>`;
+      profileData = await API.getProfile(token);
+      const initial = profileData.name.charAt(0).toUpperCase();
+      const joined  = new Date(profileData.created_at).toLocaleDateString('en-US', { year:'numeric', month:'long' });
 
-      // Load user's listings via search (filter by user_id not available, so get all and note)
+      // Load listings first to get counts
       const allProducts = await API.getProducts(0, 100);
-      const myProducts = allProducts.filter(p => p.user_id === profile.user_id);
+      const mine = allProducts.filter(p => p.user_id === profileData.user_id);
+      const activeCount = mine.filter(p => p.status === 'available').length;
+      const soldCount   = mine.filter(p => p.status === 'sold').length;
+
+      document.getElementById('profileBanner').innerHTML = `
+        <div class="profile-top">
+          <div class="profile-avatar">${initial}</div>
+          <div class="profile-info">
+            <h1>${profileData.name}</h1>
+            <p>📧 ${profileData.email}</p>
+            <p>📅 Member since ${joined}</p>
+          </div>
+          <div class="profile-actions">
+            <a href="sell.html" class="btn-primary">+ Post New Listing</a>
+          </div>
+        </div>
+        <div class="profile-stats">
+          <div class="stat-card">
+            <div class="stat-num">${mine.length}</div>
+            <div class="stat-label">Total Listings</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">${activeCount}</div>
+            <div class="stat-label">Active</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">${soldCount}</div>
+            <div class="stat-label">Sold</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">⭐</div>
+            <div class="stat-label">Trusted Seller</div>
+          </div>
+        </div>`;
+
+      document.getElementById('profileTabs').style.display = 'flex';
+
+      // Render listings
       const grid = document.getElementById('myListings');
-      if (!myProducts.length) {
-        grid.innerHTML = '<p class="empty">You have no listings yet. <a href="sell.html">Post your first item!</a></p>';
+      if (!mine.length) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1">
+            <div class="empty-icon">📭</div>
+            <h3>No listings yet</h3>
+            <p>You haven't listed anything for sale.</p>
+            <a href="sell.html" class="btn-primary" style="width:auto;padding:11px 22px;margin-top:16px;display:inline-block">
+              + Post Your First Item
+            </a>
+          </div>`;
       } else {
-        grid.innerHTML = myProducts.map(p => renderProductCard(p, true)).join('');
+        grid.innerHTML = mine.map(p => renderProductCard(p, true)).join('');
       }
-    } catch(e) {
-      document.getElementById('profileHeader').innerHTML = '<p class="error">Failed to load profile.</p>';
+
+      // Account details
+      document.getElementById('accountDetails').innerHTML = `
+        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
+          <span style="color:var(--text3)">Full Name</span><span>${profileData.name}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
+          <span style="color:var(--text3)">Email</span><span>${profileData.email}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
+          <span style="color:var(--text3)">Member Since</span><span>${joined}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:12px 0">
+          <span style="color:var(--text3)">Account Status</span>
+          <span style="color:var(--green);font-weight:600">✅ Active</span>
+        </div>`;
+
+    } catch(err) {
+      document.getElementById('profileBanner').innerHTML =
+        '<p class="error">Failed to load profile. Please log in again.</p>';
     }
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('tabListings').style.display = tab === 'listings' ? 'block' : 'none';
+    document.getElementById('tabAccount').style.display  = tab === 'account'  ? 'block' : 'none';
   }
 </script>
 </body>
