@@ -2,27 +2,12 @@
 //  Auth helpers — Student Market Palace
 // ============================================================
 
+// ── Nav update — call on every page after DOM ready ─────────
 function checkAuthNav() {
-  const token = localStorage.getItem('token');
+  const token   = localStorage.getItem('token');
   const authNav = document.getElementById('authNav');
   const userNav = document.getElementById('userNav');
-
-  // Validate token expiry before showing user nav
-  let loggedIn = false;
   if (token) {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload.exp && payload.exp * 1000 > Date.now()) {
-        loggedIn = true;
-      } else {
-        localStorage.removeItem('token'); // expired — clear it
-      }
-    } catch(e) {
-      localStorage.removeItem('token'); // malformed — clear it
-    }
-  }
-
-  if (loggedIn) {
     if (authNav) authNav.style.display = 'none';
     if (userNav) userNav.style.display = 'inline-flex';
   } else {
@@ -42,29 +27,7 @@ function logout() {
   window.location.href = 'index.html';
 }
 
-// ── Shared navbar HTML ──────────────────────────────────────
-function renderNavbar(activePage) {
-  const pages = { home: 'index.html', browse: 'products.html', login: 'login.html', register: 'register.html', sell: 'sell.html', profile: 'profile.html' };
-  return `
-  <nav class="navbar">
-    <a class="nav-brand" href="index.html">🎓 Student Market Palace</a>
-    <div class="nav-links">
-      <a href="index.html" ${activePage==='home'?'class="active"':''}>Home</a>
-      <a href="products.html" ${activePage==='browse'?'class="active"':''}>Browse</a>
-      <span id="authNav">
-        <a href="login.html" ${activePage==='login'?'class="active"':''}>Login</a>
-        <a href="register.html" class="btn-nav ${activePage==='register'?'active':''}">Register</a>
-      </span>
-      <span id="userNav" style="display:none">
-        <a href="sell.html" class="btn-nav-sell ${activePage==='sell'?'active':''}">+ Sell Item</a>
-        <a href="profile.html" ${activePage==='profile'?'class="active"':''}>My Profile</a>
-        <a href="#" onclick="logout()" class="btn-logout">Logout</a>
-      </span>
-    </div>
-  </nav>`;
-}
-
-// ── Shared footer HTML ──────────────────────────────────────
+// ── Shared footer ────────────────────────────────────────────
 function renderFooter(containerId) {
   const el = document.getElementById(containerId);
   if (!el) return;
@@ -107,21 +70,22 @@ function renderFooter(containerId) {
   </footer>`;
 }
 
-// ── Shared product card renderer ────────────────────────────
+// ── Shared product card renderer ─────────────────────────────
 const CATEGORY_ICONS = {
   'Books': '📚', 'Electronics': '💻', 'Furniture': '🛋️',
   'Clothing': '👕', 'Sports': '⚽', 'Other': '📦'
 };
 
-function renderProductCard(product, showOwnerBadge = false) {
+function renderProductCard(product, showOwnerBadge) {
   const icon = CATEGORY_ICONS[product.category] || '📦';
   const img = product.image_url
-    ? `<img src="${product.image_url}" alt="${product.title}" class="card-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+    ? `<img src="${product.image_url}" alt="${product.title}" class="card-img"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
        <div class="card-img-placeholder" style="display:none">${icon}</div>`
     : `<div class="card-img-placeholder">${icon}</div>`;
   const statusClass = product.status !== 'available' ? 'card-sold' : '';
   return `
-    <div class="product-card ${statusClass}" onclick="window.location.href='product.html?id=${product.product_id}'">
+    <div class="product-card ${statusClass}" onclick="window.location.href='product.html?id=${product.product_id}'" style="cursor:pointer">
       <div class="card-img-wrap">${img}
         ${product.status !== 'available' ? `<div class="sold-overlay">${product.status.toUpperCase()}</div>` : ''}
       </div>
@@ -133,4 +97,30 @@ function renderProductCard(product, showOwnerBadge = false) {
         <div class="card-date">${new Date(product.created_at).toLocaleDateString()}</div>
       </div>
     </div>`;
+}
+
+// ── Safety tips rotator (shared, used on index + products) ───
+function initTips() {
+  const TIPS = [
+    'Always meet in a public place like a campus cafeteria or library.',
+    'Inspect the item carefully before handing over any money.',
+    'Bring a friend when buying expensive electronics or furniture.',
+    'Never pay in advance without seeing and testing the item first.',
+    'Report suspicious listings to our helpline: +92 307 9193634.',
+  ];
+  const textEl = document.getElementById('tipText');
+  if (!textEl) return;
+  let idx = 0;
+  setInterval(() => {
+    idx = (idx + 1) % TIPS.length;
+    textEl.style.opacity = '0';
+    setTimeout(() => {
+      textEl.textContent = TIPS[idx];
+      textEl.style.opacity = '1';
+      for (let i = 0; i < TIPS.length; i++) {
+        const dot = document.getElementById('td' + i);
+        if (dot) dot.classList.toggle('active', i === idx);
+      }
+    }, 300);
+  }, 3500);
 }
