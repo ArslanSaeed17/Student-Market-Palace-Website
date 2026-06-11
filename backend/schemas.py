@@ -49,8 +49,7 @@ class ProductResponse(BaseModel):
     image_url: Optional[str]
     user_id: int
     created_at: datetime
-seller_name: Optional[str] = None
-seller_email: Optional[str] = None
+    seller_name: Optional[str] = None
+    seller_email: Optional[str] = None
     class Config:
-        # FIXED: Modern Pydantic v2 configuration strategy for SQLAlchemy models
         from_attributes = True
