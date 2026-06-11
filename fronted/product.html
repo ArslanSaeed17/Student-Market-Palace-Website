@@ -1,214 +1,549 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
   <meta charset="UTF-8"/>
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
   <title>Product Detail — Student Market Palace</title>
+
   <link rel="stylesheet" href="css/style.css"/>
+
 </head>
+
 <body>
+
+
+
 <nav class="navbar">
-  <div class="nav-brand">🎓 Student Market Palace</div>
+
+  <a class="nav-brand" href="index.html">🎓 Student Market Palace</a>
+
   <div class="nav-links">
+
     <a href="index.html">Home</a>
+
     <a href="products.html">Browse</a>
-    <span id="authNav"><a href="login.html">Login</a><a href="register.html" class="btn-nav">Register</a></span>
-    <span id="userNav" style="display:none">
-      <a href="sell.html" class="btn-nav-sell">+ Sell Item</a>
-      <a href="profile.html">My Profile</a>
-      <a href="#" onclick="logout()" class="btn-logout">Logout</a>
+
+    <span id="authNav">
+
+      <a href="login.html">Login</a>
+
+      <a href="register.html" class="btn-nav">Register</a>
+
     </span>
+
+    <span id="userNav" style="display:none">
+
+      <a href="sell.html" class="btn-nav-sell">+ Sell Item</a>
+
+      <a href="profile.html">My Profile</a>
+
+      <a href="#" onclick="logout()" class="btn-logout">Logout</a>
+
+    </span>
+
   </div>
+
 </nav>
 
+
+
 <div class="container product-detail-page" id="productDetail">
-  <div class="loading">Loading product...</div>
+
+  <div class="loading">⏳ Loading product…</div>
+
 </div>
+
+
 
 <!-- Edit Modal -->
+
 <div class="modal-overlay" id="editModal" style="display:none">
+
   <div class="modal">
-    <h3>Edit Listing</h3>
+
+    <h3>✏️ Edit Listing</h3>
+
     <div id="editAlert"></div>
-    <div class="form-group"><label>Title</label><input type="text" id="editTitle"/></div>
+
+    <div class="form-group">
+
+      <label>Title</label>
+
+      <input type="text" id="editTitle"/>
+
+    </div>
+
     <div class="form-row">
-      <div class="form-group"><label>Category</label>
+
+      <div class="form-group">
+
+        <label>Category</label>
+
         <select id="editCategory">
+
           <option>Books</option><option>Electronics</option><option>Furniture</option>
+
           <option>Clothing</option><option>Sports</option><option>Other</option>
+
         </select>
+
       </div>
-      <div class="form-group"><label>Condition</label>
-        <select id="editCondition"><option>New</option><option>Like New</option><option>Used</option></select>
+
+      <div class="form-group">
+
+        <label>Condition</label>
+
+        <select id="editCondition">
+
+          <option>New</option><option>Like New</option><option>Used</option>
+
+        </select>
+
       </div>
+
     </div>
-    <div class="form-group"><label>Price (PKR)</label><input type="number" id="editPrice" min="1"/></div>
-    <div class="form-group"><label>Description</label><textarea id="editDescription" rows="3"></textarea></div>
-    <div class="form-group"><label>Status</label>
-      <select id="editStatus"><option value="available">Available</option><option value="reserved">Reserved</option><option value="sold">Sold</option></select>
+
+    <div class="form-group">
+
+      <label>Price (PKR)</label>
+
+      <input type="number" id="editPrice" min="1"/>
+
     </div>
+
+    <div class="form-group">
+
+      <label>Description</label>
+
+      <textarea id="editDescription" rows="4"></textarea>
+
+    </div>
+
+    <div class="form-group">
+
+      <label>Status</label>
+
+      <select id="editStatus">
+
+        <option value="available">Available</option>
+
+        <option value="reserved">Reserved</option>
+
+        <option value="sold">Sold</option>
+
+      </select>
+
+    </div>
+
     <div class="modal-actions">
-      <button class="btn-primary" onclick="saveEdit()">Save Changes</button>
+
+      <button class="btn-primary" onclick="saveEdit()">💾 Save Changes</button>
+
       <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+
     </div>
+
   </div>
+
 </div>
 
-<footer class="footer"><p>© 2024 Student Market Palace</p></footer>
+
+
+<div id="footerContent"></div>
+
+
 
 <script src="js/api.js"></script>
+
 <script src="js/auth.js"></script>
+
 <script>
+
   checkAuthNav();
-  const params = new URLSearchParams(window.location.search);
+
+  renderFooter('footerContent');
+
+
+
+  const params    = new URLSearchParams(window.location.search);
+
   const productId = params.get('id');
+
   let currentProduct = null;
 
+
+
+  // ✅ REMOVED duplicate CATEGORY_ICONS — already defined in auth.js
+
+
+
   if (!productId) window.location.href = 'products.html';
+
   else loadProduct();
 
+
+
   async function loadProduct() {
+
     const container = document.getElementById('productDetail');
+
     try {
+
       currentProduct = await API.getProduct(productId);
-      const token = localStorage.getItem('token');
+
+      const token   = localStorage.getItem('token');
+
       const isOwner = token && await checkOwnership(currentProduct.user_id);
+
+
+
+      const icon        = CATEGORY_ICONS[currentProduct.category] || '📦';
+
       const statusBadge = `<span class="badge badge-${currentProduct.status}">${currentProduct.status}</span>`;
+
       const img = currentProduct.image_url
-        ? `<img src="${currentProduct.image_url}" alt="${currentProduct.title}" class="product-detail-img"/>`
-        : `<div class="product-detail-placeholder">📦</div>`;
+
+        ? `<img src="${currentProduct.image_url}" alt="${currentProduct.title}" class="product-detail-img"
+
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+
+           <div class="product-detail-placeholder" style="display:none">${icon}</div>`
+
+        : `<div class="product-detail-placeholder">${icon}</div>`;
+
+
+
+      // ✅ seller_name from backend (if updated) or fallback
+
+      const sellerName = currentProduct.seller_name || 'Seller';
+
+
 
       container.innerHTML = `
+
         <a href="products.html" class="back-link">← Back to Browse</a>
+
         <div class="product-detail-card">
+
           <div class="product-detail-left">${img}</div>
+
           <div class="product-detail-right">
+
             <div class="detail-header">
+
               <h1>${currentProduct.title}</h1>
+
               ${statusBadge}
+
             </div>
+
             <div class="detail-price">PKR ${parseFloat(currentProduct.price).toLocaleString()}</div>
+
             <div class="detail-meta">
-              <span>📁 ${currentProduct.category}</span>
+
+              <span>${icon} ${currentProduct.category}</span>
+
               <span>✨ ${currentProduct.condition}</span>
+
               <span>📅 ${new Date(currentProduct.created_at).toLocaleDateString()}</span>
+
+              <span>👤 ${sellerName}</span>
+
             </div>
+
             <div class="detail-description">
+
               <h3>Description</h3>
+
               <p>${currentProduct.description}</p>
+
             </div>
+
             ${isOwner ? `
+
               <div class="owner-actions">
+
                 <button class="btn-primary" onclick="openEditModal()">✏️ Edit Listing</button>
+
                 <button class="btn-danger" onclick="deleteProduct()">🗑️ Delete</button>
+
               </div>` : `
+
               <div class="buyer-actions">
+
                 <button class="btn-primary" onclick="contactSeller()">💬 Contact Seller</button>
-              </div>`}
+
+              </div>
+
+              <p style="font-size:0.78rem;color:var(--text3);margin-top:10px">
+
+                Questions? Call our helpline: <a href="tel:+923079193634" style="color:var(--purple-light)">+92 307 9193634</a>
+
+              </p>`}
+
           </div>
+
         </div>`;
-    } catch(e) {
+
+    } catch(err) {
+
       container.innerHTML = '<p class="error">Product not found.</p>';
+
     }
+
   }
+
+
 
   async function checkOwnership(ownerId) {
+
     try {
+
       const profile = await API.getProfile(localStorage.getItem('token'));
+
       return profile.user_id === ownerId;
+
     } catch { return false; }
+
   }
+
+
 
   function openEditModal() {
-    document.getElementById('editTitle').value = currentProduct.title;
-    document.getElementById('editCategory').value = currentProduct.category;
-    document.getElementById('editCondition').value = currentProduct.condition;
-    document.getElementById('editPrice').value = currentProduct.price;
+
+    document.getElementById('editTitle').value       = currentProduct.title;
+
+    document.getElementById('editCategory').value    = currentProduct.category;
+
+    document.getElementById('editCondition').value   = currentProduct.condition;
+
+    document.getElementById('editPrice').value       = currentProduct.price;
+
     document.getElementById('editDescription').value = currentProduct.description;
-    document.getElementById('editStatus').value = currentProduct.status;
+
+    document.getElementById('editStatus').value      = currentProduct.status;
+
     document.getElementById('editModal').style.display = 'flex';
+
   }
 
-  function closeModal() { document.getElementById('editModal').style.display = 'none'; }
+
+
+  function closeModal() {
+
+    document.getElementById('editModal').style.display = 'none';
+
+  }
+
+
 
   async function saveEdit() {
+
     const payload = {
-      title: document.getElementById('editTitle').value,
-      category: document.getElementById('editCategory').value,
-      condition: document.getElementById('editCondition').value,
-      price: parseFloat(document.getElementById('editPrice').value),
+
+      title:       document.getElementById('editTitle').value,
+
+      category:    document.getElementById('editCategory').value,
+
+      condition:   document.getElementById('editCondition').value,
+
+      price:       parseFloat(document.getElementById('editPrice').value),
+
       description: document.getElementById('editDescription').value,
-      status: document.getElementById('editStatus').value,
+
+      status:      document.getElementById('editStatus').value,
+
     };
+
     try {
+
       await API.updateProduct(productId, payload, localStorage.getItem('token'));
+
       closeModal();
+
       loadProduct();
-    } catch(e) {
-      document.getElementById('editAlert').innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+
+    } catch(err) {
+
+      document.getElementById('editAlert').innerHTML =
+
+        `<div class="alert alert-error">${err.message}</div>`;
+
     }
+
   }
+
+
 
   async function deleteProduct() {
+
     if (!confirm('Are you sure you want to delete this listing?')) return;
+
     try {
+
       await API.deleteProduct(productId, localStorage.getItem('token'));
-      alert('Listing deleted.');
+
       window.location.href = 'profile.html';
-    } catch(e) { alert('Delete failed: ' + e.message); }
+
+    } catch(err) { alert('Delete failed: ' + err.message); }
+
   }
 
-  // ✅ UPDATED: contactSeller now shows WhatsApp + Gmail options
+
+
   function contactSeller() {
-    if (!localStorage.getItem('token')) { window.location.href = 'login.html'; return; }
+
+    if (!localStorage.getItem('token')) {
+
+      window.location.href = 'login.html'; return;
+
+    }
 
     const existing = document.getElementById('contact-modal');
+
     if (existing) existing.remove();
 
-    const productMsg = `Hi! I'm interested in buying *${currentProduct.title}* listed at *PKR ${parseFloat(currentProduct.price).toLocaleString()}* on Student Market Palace. Is it still available?`;
+
+
+    // ✅ Use actual seller email from backend, fallback to support email
+
+    const sellerEmail = currentProduct.seller_email || 'arslanbrall@gmail.com';
+
+    const sellerName  = currentProduct.seller_name  || 'Seller';
+
+    const icon        = CATEGORY_ICONS[currentProduct.category] || '📦';
+
+
+
+    const productMsg  = `Hi! I'm interested in buying *${currentProduct.title}* listed at *PKR ${parseFloat(currentProduct.price).toLocaleString()}* on Student Market Palace. Is it still available?`;
+
     const whatsappMsg = encodeURIComponent(productMsg);
-    const emailSubject = encodeURIComponent(`Interested in: ${currentProduct.title}`);
-    const emailBody = encodeURIComponent(productMsg.replace(/\*/g, ''));
+
+    const emailSubj   = encodeURIComponent(`Interested in: ${currentProduct.title}`);
+
+    const emailBody   = encodeURIComponent(productMsg.replace(/\*/g, ''));
+
+
 
     const modal = document.createElement('div');
+
     modal.id = 'contact-modal';
-    modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;font-family:sans-serif;`;
+
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;backdrop-filter:blur(8px)';
+
     modal.innerHTML = `
-      <div style="background:white;border-radius:16px;padding:32px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;">
-        <h3 style="margin:0 0 6px;color:#1a1a2e;font-size:20px;">Contact Seller</h3>
-        <p style="margin:0 0 24px;color:#888;font-size:14px;">Choose how you'd like to reach out</p>
+
+      <div style="background:#16162a;border:1px solid rgba(139,92,246,0.3);border-radius:20px;padding:36px 32px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.6);animation:authIn 0.3s ease">
+
+        <div style="text-align:center;margin-bottom:24px">
+
+          <div style="font-size:2.4rem;margin-bottom:8px">${icon}</div>
+
+          <h3 style="color:#f1f0ff;font-size:1.15rem;font-weight:800;margin-bottom:4px">Contact Seller</h3>
+
+          <p style="color:#6b6890;font-size:0.83rem">Seller: <strong style="color:#a78bfa">${sellerName}</strong></p>
+
+        </div>
+
+
 
         <a href="https://wa.me/923008971489?text=${whatsappMsg}" target="_blank"
-          style="display:flex;align-items:center;gap:14px;padding:16px 20px;background:#25D366;color:white;border-radius:12px;text-decoration:none;margin-bottom:12px;">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+
+           style="display:flex;align-items:center;gap:14px;padding:16px 20px;background:rgba(37,211,102,0.12);color:#6ee7b7;border:1px solid rgba(37,211,102,0.25);border-radius:12px;text-decoration:none;margin-bottom:10px;transition:all 0.2s"
+
+           onmouseover="this.style.background='rgba(37,211,102,0.2)'" onmouseout="this.style.background='rgba(37,211,102,0.12)'">
+
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="#6ee7b7">
+
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+
           </svg>
-          <div style="text-align:left;">
-            <div style="font-weight:700;font-size:15px;">WhatsApp</div>
-            <div style="font-size:13px;opacity:0.9;">0300-8971489</div>
+
+          <div>
+
+            <div style="font-weight:700;font-size:0.93rem">WhatsApp</div>
+
+            <div style="font-size:0.78rem;opacity:0.8">+92 300 8971489</div>
+
           </div>
+
         </a>
 
-        <a href="mailto:${currentProduct.seller_email || currentProduct.email || ''}?subject=${emailSubject}&body=${emailBody}" target="_blank"
-          style="display:flex;align-items:center;gap:14px;padding:16px 20px;background:#EA4335;color:white;border-radius:12px;text-decoration:none;margin-bottom:24px;">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+
+
+        <a href="mailto:${sellerEmail}?subject=${emailSubj}&body=${emailBody}" target="_blank"
+
+           style="display:flex;align-items:center;gap:14px;padding:16px 20px;background:rgba(139,92,246,0.12);color:#a78bfa;border:1px solid rgba(139,92,246,0.25);border-radius:12px;text-decoration:none;margin-bottom:10px;transition:all 0.2s"
+
+           onmouseover="this.style.background='rgba(139,92,246,0.2)'" onmouseout="this.style.background='rgba(139,92,246,0.12)'">
+
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="#a78bfa">
+
             <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/>
+
           </svg>
-          <div style="text-align:left;">
-            <div style="font-weight:700;font-size:15px;">Gmail</div>
-            <div style="font-size:13px;opacity:0.9;">${currentProduct.seller_email || currentProduct.email || 'No email available'}</div>
+
+          <div>
+
+            <div style="font-weight:700;font-size:0.93rem">Gmail</div>
+
+            <div style="font-size:0.78rem;opacity:0.8">${sellerEmail}</div>
+
           </div>
+
         </a>
+
+
+
+        <a href="tel:+923079193634"
+
+           style="display:flex;align-items:center;gap:14px;padding:16px 20px;background:rgba(6,182,212,0.1);color:#67e8f9;border:1px solid rgba(6,182,212,0.2);border-radius:12px;text-decoration:none;margin-bottom:20px;transition:all 0.2s"
+
+           onmouseover="this.style.background='rgba(6,182,212,0.18)'" onmouseout="this.style.background='rgba(6,182,212,0.1)'">
+
+          <span style="font-size:1.5rem">📞</span>
+
+          <div>
+
+            <div style="font-weight:700;font-size:0.93rem">Call Helpline</div>
+
+            <div style="font-size:0.78rem;opacity:0.8">+92 307 9193634</div>
+
+          </div>
+
+        </a>
+
+
 
         <button onclick="document.getElementById('contact-modal').remove()"
-          style="background:none;border:1px solid #ddd;color:#666;padding:10px 28px;border-radius:8px;cursor:pointer;font-size:14px;">
+
+          style="width:100%;background:transparent;border:1px solid rgba(139,92,246,0.2);color:#6b6890;padding:11px;border-radius:10px;cursor:pointer;font-size:0.88rem;transition:all 0.2s"
+
+          onmouseover="this.style.borderColor='rgba(139,92,246,0.4)';this.style.color='#a09dc0'"
+
+          onmouseout="this.style.borderColor='rgba(139,92,246,0.2)';this.style.color='#6b6890'">
+
           Cancel
+
         </button>
+
       </div>`;
 
+
+
     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
     document.body.appendChild(modal);
+
   }
+
 </script>
+
 </body>
+
 </html>
