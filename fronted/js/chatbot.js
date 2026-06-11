@@ -1,7 +1,7 @@
 // ============================================================
 //  Student Market Palace — AI Chatbot Widget
-//  chatbot.js  →  calls /api/chat (Vercel serverless)
-//  API key is NEVER exposed in the browser
+//  chatbot.js  →  100% client-side, NO backend, NO API key
+//  All answers are pre-built in the Knowledge Base below
 // ============================================================
 
 (function () {
@@ -177,6 +177,81 @@
   document.body.appendChild(btn);
   document.body.appendChild(win);
 
+  // ── Knowledge Base ───────────────────────────────────────────
+  // Add more entries here anytime — just follow the same pattern.
+  // keywords: any word/phrase the user might type (lowercase)
+  // answer:   the reply shown in the chat (use \n for new lines)
+  // ─────────────────────────────────────────────────────────────
+  const KB = [
+    {
+      keywords: ['sell', 'selling', 'bechna', 'becho', 'list', 'listing', 'post ad', 'add product', 'apload', 'upload'],
+      answer: '🛒 Selling on SMP is very easy!\n\n1. Click "Post Ad" on the homepage\n2. Choose a category for your item\n3. Add title, price, photos & description\n4. Enter your WhatsApp or email for buyers\n5. Submit — your listing goes live instantly!\n\n✅ Completely FREE for all students.'
+    },
+    {
+      keywords: ['buy', 'buying', 'kharidna', 'purchase', 'order', 'khareedna', 'khareed'],
+      answer: '🔍 Buying on SMP is simple:\n\n1. Browse or search listings on the homepage\n2. Click any product to see full details\n3. Hit "Contact Seller" to reach them via WhatsApp or Gmail\n4. Agree on a price and meet safely on campus\n\n💡 No online payment needed — all deals are direct between students!'
+    },
+    {
+      keywords: ['contact', 'email', 'whatsapp', 'reach', 'support', 'help', 'helpline', 'admin', 'sampark'],
+      answer: '📬 Contact SMP Support:\n\n📧 Email: support@studentmarketpalace.com\n💬 WhatsApp: +92-300-0000000\n🕐 Available: Mon–Sat, 9am–6pm\n\nYou can also use the "Contact Seller" button on any product listing to reach the seller directly.'
+    },
+    {
+      keywords: ['free', 'cost', 'price', 'fee', 'charge', 'kitna', 'paid', 'muft', 'paisa', 'paise', 'rupay', 'rupees'],
+      answer: '✅ Student Market Palace is 100% FREE!\n\n• No listing fee\n• No commission on sales\n• No hidden charges\n• No subscription needed\n\nJust register with your student email and start buying or selling!'
+    },
+    {
+      keywords: ['safety', 'safe', 'scam', 'fraud', 'tips', 'secure', 'dhoka', 'trust', 'fake'],
+      answer: '🛡️ Student Safety Tips:\n\n• Always meet in a public place (on campus is best)\n• Never pay in advance without seeing the item\n• Verify the seller on WhatsApp before meeting\n• Do NOT share your bank account or CNIC details\n• Prefer cash payment on delivery\n• Report fake listings to admin immediately\n\n🚨 Suspicious? Email: report@studentmarketpalace.com'
+    },
+    {
+      keywords: ['account', 'register', 'signup', 'sign up', 'login', 'log in', 'profile', 'register karna', 'banana'],
+      answer: '👤 Creating an account is quick:\n\n1. Click "Register" in the top navigation\n2. Enter your name and student email\n3. Set a strong password\n4. Verify your email (check inbox/spam)\n5. Done! You can now post listings.\n\n💡 Already registered? Click "Login" and enter your credentials.'
+    },
+    {
+      keywords: ['delete', 'remove', 'edit', 'update', 'change', 'modify', 'hatana', 'badalna'],
+      answer: '✏️ To edit or delete a listing:\n\n1. Log into your account\n2. Click your profile icon → "My Listings"\n3. Find the item you want to change\n4. Click ✏️ Edit to update details\n   OR 🗑️ Delete to remove it\n\n⏰ Note: Listings automatically expire after 30 days.'
+    },
+    {
+      keywords: ['category', 'categories', 'books', 'electronics', 'clothes', 'notes', 'uniform', 'laptop', 'mobile', 'phone'],
+      answer: '📦 Available categories on SMP:\n\n📚 Books & Notes\n💻 Electronics & Gadgets\n👕 Clothes & Uniforms\n🛋️ Dorm & Room Items\n🎮 Games & Hobbies\n🍱 Food & Snacks\n🧪 Lab Equipment\n📐 Stationery & Supplies\n\nMore categories being added soon!'
+    },
+    {
+      keywords: ['password', 'forgot', 'reset', 'bhool', 'bhool gaya', 'change password'],
+      answer: '🔑 Forgot your password?\n\n1. Click "Login" on the homepage\n2. Click "Forgot Password?" below the form\n3. Enter your registered email\n4. Check your inbox for a reset link\n5. Click the link and set a new password\n\n📧 Didn\'t get the email? Check your spam folder or contact support.'
+    },
+    {
+      keywords: ['search', 'find', 'dhundna', 'dhundo', 'item', 'product', 'kahan'],
+      answer: '🔎 How to search on SMP:\n\n• Use the Search Bar at the top of the homepage\n• Type the item name (e.g. "calculus book", "HP laptop")\n• Filter results by category, price range, or location\n• Sort by Newest or Lowest Price\n\n💡 Tip: Use simple keywords for best results!'
+    },
+    {
+      keywords: ['photo', 'image', 'picture', 'tasveer', 'upload photo', 'add photo'],
+      answer: '📷 Adding photos to your listing:\n\n• You can upload up to 5 photos per listing\n• Accepted formats: JPG, PNG, WEBP\n• Max size: 5MB per photo\n• Good photos = faster sales!\n\n💡 Tip: Take photos in natural daylight for best quality.'
+    },
+    {
+      keywords: ['smp', 'student market palace', 'kya hai', 'what is', 'about', 'ke baare', 'platform'],
+      answer: '🎓 About Student Market Palace (SMP):\n\nSMP is a free online marketplace built exclusively for university students.\n\n✅ Buy & sell used books, electronics, clothes and more\n✅ Connect directly with fellow students\n✅ Safe, simple, and completely free\n✅ No middleman — deal directly!\n\nBuilt by students, for students. 🚀'
+    },
+  ];
+
+  // Default reply when no keyword matches
+  const FALLBACK = '🤔 Mujhe samajh nahi aaya!\n\nAap yeh cheezain poochh saktay ho:\n• Selling / Buying\n• Account banana\n• Contact info\n• Safety tips\n• Categories\n• Fees / Cost\n\nYa seedha email karein: support@studentmarketpalace.com';
+
+  // ── Matcher Function ─────────────────────────────────────────
+  // Lowercases the input and checks each KB entry for a keyword match.
+  // Returns the first matching answer, or the FALLBACK string.
+  function getReply(userText) {
+    const lower = userText.toLowerCase().trim();
+    // Empty input guard
+    if (!lower) return '😊 Kuch to likho! Main help karne ke liye yahan hun.';
+
+    for (const entry of KB) {
+      if (entry.keywords.some(kw => lower.includes(kw))) {
+        return entry.answer;
+      }
+    }
+    return FALLBACK;
+  }
+
   // ── State ────────────────────────────────────────────────────
   const chatHistory = [];
 
@@ -209,7 +284,7 @@
     }
   });
 
-  // ── Send message ─────────────────────────────────────────────
+  // ── Send Message ─────────────────────────────────────────────
   async function sendMessage() {
     const input   = document.getElementById('smp-chat-input');
     const sendBtn = document.getElementById('smp-chat-send');
@@ -219,7 +294,7 @@
     // Hide suggestions once conversation starts
     document.getElementById('smp-suggestions').style.display = 'none';
 
-    input.value  = '';
+    input.value      = '';
     sendBtn.disabled = true;
 
     appendMessage(text, 'user');
@@ -227,31 +302,14 @@
 
     const typingEl = appendMessage('⏳ Typing…', 'bot typing');
 
-    try {
-      // ✅ Calls YOUR serverless function — API key never touches the browser
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: chatHistory })
-      });
+    // Small delay so it feels natural (no backend = instant otherwise)
+    await new Promise(resolve => setTimeout(resolve, 450));
 
-      const data = await response.json();
+    typingEl.remove();
 
-      typingEl.remove();
-
-      if (!response.ok || data.error) {
-        appendMessage('⚠️ ' + (data.error || 'Something went wrong. Please try again.'), 'bot error');
-      } else {
-        const reply = data.reply;
-        appendMessage(reply, 'bot');
-        chatHistory.push({ role: 'assistant', content: reply });
-      }
-
-    } catch (err) {
-      typingEl.remove();
-      appendMessage('⚠️ Connection error. Please check your internet and try again.', 'bot error');
-      console.error('SMP chatbot error:', err);
-    }
+    const reply = getReply(text);
+    appendMessage(reply, 'bot');
+    chatHistory.push({ role: 'assistant', content: reply });
 
     sendBtn.disabled = false;
     input.focus();
@@ -261,8 +319,8 @@
   function appendMessage(text, cls) {
     const msgs = document.getElementById('smp-chat-messages');
     const el   = document.createElement('div');
-    el.className  = 'smp-msg ' + cls;
-    el.innerHTML  = text.replace(/\n/g, '<br>');
+    el.className = 'smp-msg ' + cls;
+    el.innerHTML = text.replace(/\n/g, '<br>');
     msgs.appendChild(el);
     msgs.scrollTop = msgs.scrollHeight;
     return el;
