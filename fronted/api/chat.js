@@ -1,3 +1,6 @@
+// api/chat.js — Vercel Serverless Function
+// ✅ Uses Google Gemini API (free via Google AI Studio)
+
 const SMP_SYSTEM_PROMPT = `You are the official AI assistant for "Student Market Palace" — a campus marketplace website built for UMT (University of Management and Technology) students in Lahore, Pakistan.
 YOUR IDENTITY:
 - Your name is "SMP Assistant" or "Campus Assistant"
@@ -36,37 +39,47 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'messages array is required' });
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.error('ANTHROPIC_API_KEY not set in Vercel environment variables');
+  if (!process.env.GEMINI_API_KEY) {
+    console.error('GEMINI_API_KEY not set in Vercel environment variables');
     return res.status(500).json({ error: 'Server configuration error' });
   }
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 600,
-        system: SMP_SYSTEM_PROMPT,
-        messages
-      })
-    });
+    // Convert messages to Gemini format
+    const geminiMessages = messages.map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }));
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: {
+            parts: [{ text: SMP_SYSTEM_PROMPT }]
+          },
+          contents: geminiMessages,
+          generationConfig: {
+            maxOutputTokens: 600,
+            temperature: 0.7
+          }
+        })
+      }
+    );
 
     if (!response.ok) {
       const errData = await response.json();
-      console.error('Anthropic API error:', errData);
+      console.error('Gemini API error:', errData);
       return res.status(response.status).json({ error: 'AI service error' });
     }
 
     const data = await response.json();
-    return res.status(200).json({
-      reply: data.content?.[0]?.text || 'Sorry, kuch masla hua. Dobara try karein.'
-    });
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text
+      || 'Sorry, kuch masla hua. Dobara try karein.';
+
+    return res.status(200).json({ reply });
 
   } catch (err) {
     console.error('Handler error:', err);
