@@ -114,6 +114,14 @@ def get_product_by_id(id: int, db: Session = Depends(database.get_db)):
     product = db.query(models.Product).filter(models.Product.product_id == id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Requested marketplace product listing does not exist.")
+    
+    # Fetch seller info from User table
+    seller = db.query(models.User).filter(models.User.user_id == product.user_id).first()
+    
+    # Attach seller details to product object
+    product.seller_name  = seller.name  if seller else None
+    product.seller_email = seller.email if seller else None
+    
     return product
 
 # 7. Create Product Listing [Protected]
