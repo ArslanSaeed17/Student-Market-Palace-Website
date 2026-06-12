@@ -3,142 +3,357 @@
 //  chatbot.js  →  100% client-side, NO backend, NO API key
 //  All answers are pre-built in the Knowledge Base below
 // ============================================================
+/* Floating AI Button */
+#smp-chat-btn{
+position:fixed;
+bottom:28px;
+right:28px;
+z-index:9999;
 
-(function () {
-  'use strict';
+width:64px;
+height:64px;
 
-  // ── Inject CSS ──────────────────────────────────────────────
-  const style = document.createElement('style');
-  style.textContent = `
-    /* Floating button */
-    #smp-chat-btn {
-      position: fixed; bottom: 28px; right: 28px; z-index: 9999;
-      width: 58px; height: 58px; border-radius: 50%;
-      background: linear-gradient(135deg, #7c3aed, #a855f7);
-      border: none; cursor: pointer;
-      box-shadow: 0 4px 24px rgba(124,58,237,0.55);
-      font-size: 1.5rem; display: flex; align-items: center;
-      justify-content: center; transition: transform 0.2s, box-shadow 0.2s;
-      animation: smpPulse 3s ease-in-out infinite;
-    }
-    #smp-chat-btn:hover {
-      transform: scale(1.12);
-      box-shadow: 0 6px 32px rgba(124,58,237,0.75);
-      animation: none;
-    }
-    @keyframes smpPulse {
-      0%, 100% { box-shadow: 0 4px 24px rgba(124,58,237,0.55); }
-      50%       { box-shadow: 0 4px 36px rgba(168,85,247,0.8); }
-    }
+border:none;
+border-radius:50%;
 
-    /* Chat window */
-    #smp-chat-window {
-      position: fixed; bottom: 98px; right: 28px; z-index: 9998;
-      width: 340px; max-height: 500px;
-      background: var(--surface, #1e1b2e);
-      border: 1px solid var(--border2, rgba(139,92,246,0.3));
-      border-radius: 18px;
-      box-shadow: 0 12px 50px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,92,246,0.1);
-      display: none; flex-direction: column; overflow: hidden;
-      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-      animation: smpSlideIn 0.25s ease;
-    }
-    #smp-chat-window.open { display: flex; }
-    @keyframes smpSlideIn {
-      from { opacity: 0; transform: translateY(12px) scale(0.97); }
-      to   { opacity: 1; transform: none; }
-    }
+background:rgba(124,58,237,.18);
+backdrop-filter:blur(18px);
 
-    /* Header */
-    #smp-chat-header {
-      padding: 14px 16px;
-      background: linear-gradient(135deg, #6d28d9, #a855f7);
-      display: flex; align-items: center; gap: 10px;
-    }
-    #smp-chat-header .smp-avatar {
-      width: 34px; height: 34px; border-radius: 50%;
-      background: rgba(255,255,255,0.2);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem; flex-shrink: 0;
-    }
-    #smp-chat-header .smp-title { flex: 1; }
-    #smp-chat-header .smp-title strong {
-      display: block; color: #fff; font-size: 0.9rem; font-weight: 700;
-    }
-    #smp-chat-header .smp-title span {
-      font-size: 0.72rem; color: rgba(255,255,255,0.7);
-    }
-    #smp-chat-close {
-      background: rgba(255,255,255,0.15); border: none; color: #fff;
-      width: 28px; height: 28px; border-radius: 50%; font-size: 0.9rem;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s; flex-shrink: 0;
-    }
-    #smp-chat-close:hover { background: rgba(255,255,255,0.3); }
+border:1px solid rgba(255,255,255,.15);
 
-    /* Messages */
-    #smp-chat-messages {
-      flex: 1; overflow-y: auto; padding: 14px 12px;
-      display: flex; flex-direction: column; gap: 8px;
-      max-height: 360px; scroll-behavior: smooth;
-    }
-    #smp-chat-messages::-webkit-scrollbar { width: 4px; }
-    #smp-chat-messages::-webkit-scrollbar-track { background: transparent; }
-    #smp-chat-messages::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 2px; }
+box-shadow:
+0 10px 40px rgba(124,58,237,.35),
+inset 0 0 15px rgba(255,255,255,.08);
 
-    .smp-msg {
-      max-width: 88%; padding: 9px 13px; border-radius: 14px;
-      font-size: 0.84rem; line-height: 1.55; word-break: break-word;
-    }
-    .smp-msg.bot {
-      background: var(--bg3, #2a2740); color: var(--text, #e2e0f0);
-      align-self: flex-start; border-bottom-left-radius: 4px;
-    }
-    .smp-msg.user {
-      background: linear-gradient(135deg, #7c3aed, #a855f7);
-      color: #fff; align-self: flex-end; border-bottom-right-radius: 4px;
-    }
-    .smp-msg.typing { opacity: 0.65; font-style: italic; color: var(--text3, #9896b8); }
-    .smp-msg.error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.25); }
+cursor:pointer;
 
-    /* Suggested questions */
-    #smp-suggestions {
-      display: flex; flex-wrap: wrap; gap: 6px;
-      padding: 0 12px 10px;
-    }
-    .smp-suggestion {
-      padding: 5px 11px; border-radius: 20px; font-size: 0.75rem; font-weight: 500;
-      background: var(--bg3, #2a2740); color: var(--purple-light, #a78bfa);
-      border: 1px solid rgba(139,92,246,0.25); cursor: pointer;
-      transition: all 0.15s; white-space: nowrap;
-    }
-    .smp-suggestion:hover { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.5); }
+display:flex;
+align-items:center;
+justify-content:center;
 
-    /* Input row */
-    #smp-chat-input-row {
-      padding: 10px 12px;
-      border-top: 1px solid var(--border, rgba(139,92,246,0.15));
-      display: flex; gap: 8px; align-items: center;
-    }
-    #smp-chat-input {
-      flex: 1; padding: 9px 12px; border-radius: 10px;
-      background: var(--bg3, #2a2740);
-      border: 1px solid var(--border, rgba(139,92,246,0.2));
-      color: var(--text, #e2e0f0); font-size: 0.84rem;
-      font-family: inherit; outline: none; transition: border-color 0.2s;
-    }
-    #smp-chat-input:focus { border-color: #7c3aed; }
-    #smp-chat-input::placeholder { color: var(--text3, #6b6890); }
-    #smp-chat-send {
-      padding: 9px 14px; background: linear-gradient(135deg, #7c3aed, #a855f7);
-      color: #fff; border: none; border-radius: 10px; cursor: pointer;
-      font-size: 0.84rem; font-weight: 700; transition: opacity 0.15s, transform 0.15s;
-      white-space: nowrap;
-    }
-    #smp-chat-send:hover:not(:disabled) { opacity: 0.9; transform: scale(1.04); }
-    #smp-chat-send:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
-  `;
-  document.head.appendChild(style);
+font-size:28px;
+
+animation:
+floatAI 4s ease-in-out infinite,
+glowAI 3s infinite;
+}
+
+@keyframes floatAI{
+0%,100%{
+transform:translateY(0);
+}
+50%{
+transform:translateY(-8px);
+}
+}
+
+@keyframes glowAI{
+50%{
+box-shadow:
+0 18px 60px rgba(168,85,247,.55);
+}
+}
+
+#smp-chat-btn:hover{
+transform:scale(1.08);
+}
+
+/* Glass Window */
+
+#smp-chat-window{
+
+position:fixed;
+right:28px;
+bottom:105px;
+
+width:370px;
+height:540px;
+
+display:none;
+flex-direction:column;
+
+background:
+linear-gradient(
+135deg,
+rgba(255,255,255,.10),
+rgba(255,255,255,.04)
+);
+
+backdrop-filter:blur(28px);
+
+border:1px solid
+rgba(255,255,255,.12);
+
+border-radius:28px;
+
+overflow:hidden;
+
+box-shadow:
+0 25px 70px rgba(0,0,0,.5);
+
+animation:
+openGlass .45s cubic-bezier(.2,.8,.2,1);
+
+}
+
+#smp-chat-window.open{
+display:flex;
+}
+
+@keyframes openGlass{
+from{
+opacity:0;
+transform:
+translateY(40px)
+scale(.94);
+}
+to{
+opacity:1;
+transform:none;
+}
+}
+
+/* Header */
+
+#smp-chat-header{
+
+padding:18px;
+
+background:
+linear-gradient(
+135deg,
+rgba(124,58,237,.40),
+rgba(0,229,255,.10)
+);
+
+backdrop-filter:blur(30px);
+
+display:flex;
+align-items:center;
+gap:12px;
+
+}
+
+.smp-avatar{
+
+width:42px;
+height:42px;
+
+border-radius:50%;
+
+background:
+linear-gradient(
+135deg,
+#8b5cf6,
+#00e5ff
+);
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+animation:pulseAvatar 2s infinite;
+
+}
+
+@keyframes pulseAvatar{
+
+50%{
+transform:scale(1.08);
+}
+
+}
+
+.smp-title strong{
+color:white;
+font-size:15px;
+}
+
+.smp-title span{
+color:rgba(255,255,255,.65);
+}
+
+/* Messages */
+
+#smp-chat-messages{
+
+flex:1;
+
+padding:18px;
+
+overflow:auto;
+
+display:flex;
+
+flex-direction:column;
+
+gap:12px;
+
+}
+
+.smp-msg{
+
+padding:12px 16px;
+
+max-width:82%;
+
+border-radius:18px;
+
+font-size:14px;
+
+animation:
+messageAppear .25s;
+
+}
+
+@keyframes messageAppear{
+
+from{
+opacity:0;
+transform:translateY(10px);
+}
+
+}
+
+.smp-msg.bot{
+
+background:
+rgba(255,255,255,.08);
+
+color:white;
+
+backdrop-filter:blur(18px);
+
+}
+
+.smp-msg.user{
+
+align-self:flex-end;
+
+background:
+linear-gradient(
+135deg,
+#7c3aed,
+#9333ea
+);
+
+color:white;
+
+}
+
+/* Typing Animation */
+
+.typing{
+
+display:flex;
+
+gap:4px;
+
+padding:12px;
+
+}
+
+.typing span{
+
+width:8px;
+height:8px;
+
+background:#a855f7;
+
+border-radius:50%;
+
+animation:typing 1.2s infinite;
+
+}
+
+.typing span:nth-child(2){
+animation-delay:.2s;
+}
+
+.typing span:nth-child(3){
+animation-delay:.4s;
+}
+
+@keyframes typing{
+
+50%{
+opacity:.25;
+transform:translateY(-4px);
+}
+
+}
+
+/* Input */
+
+#smp-chat-input-row{
+
+padding:14px;
+
+display:flex;
+
+gap:10px;
+
+background:
+rgba(255,255,255,.04);
+
+}
+
+#smp-chat-input{
+
+flex:1;
+
+padding:12px;
+
+border:none;
+
+border-radius:14px;
+
+background:
+rgba(255,255,255,.08);
+
+backdrop-filter:blur(18px);
+
+color:white;
+
+}
+
+#smp-chat-input:focus{
+
+outline:none;
+
+box-shadow:
+0 0 0 2px #8b5cf6;
+
+}
+
+#smp-chat-send{
+
+padding:12px 18px;
+
+border:none;
+
+border-radius:14px;
+
+background:
+linear-gradient(
+135deg,
+#8b5cf6,
+#00e5ff
+);
+
+color:white;
+
+cursor:pointer;
+
+transition:.25s;
+
+}
+
+#smp-chat-send:hover{
+
+transform:scale(1.06);
+
+}
 
   // ── Build HTML ───────────────────────────────────────────────
   const btn = document.createElement('button');
