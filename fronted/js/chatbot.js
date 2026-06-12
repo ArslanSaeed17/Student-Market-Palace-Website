@@ -144,7 +144,7 @@
   const btn = document.createElement('button');
   btn.id    = 'smp-chat-btn';
   btn.title = 'Chat with SMP Assistant';
-  btn.innerHTML = '🤖';
+  btn.innerHTML = '֎🇦🇮';
 
   const win = document.createElement('div');
   win.id = 'smp-chat-window';
@@ -159,8 +159,9 @@
     </div>
     <div id="smp-chat-messages">
       <div class="smp-msg bot">
-        👋 Assalam o Alaikum! Main SMP Assistant hun.<br><br>
+        👋 Assalam o Alaikum! Main SMP Assistant hun❤️.<br><br>
         Student Market Palace ke baare mein kuch bhi poochh saktay ho — buying, selling, account, ya contact info!
+        Please do not ask irrelevant questions 
       </div>
     </div>
     <div id="smp-suggestions">
@@ -193,7 +194,7 @@
     },
     {
       keywords: ['contact', 'email', 'whatsapp', 'reach', 'support', 'help', 'helpline', 'admin', 'sampark'],
-      answer: '📬 Contact SMP Support:\n\n📧 Email: support@studentmarketpalace.com\n💬 WhatsApp: +92-300-0000000\n🕐 Available: Mon–Sat, 9am–6pm\n\nYou can also use the "Contact Seller" button on any product listing to reach the seller directly.'
+      answer: '📬 Contact SMP Support:\n\n📧 Email: arslanbrall@gmail.com \n💬 WhatsApp: +92-300-8971489\n🕐 Available: Mon–Sat, 9am–6pm\n\nYou can also use the "Contact Seller" button on any product listing to reach the seller directly.'
     },
     {
       keywords: ['free', 'cost', 'price', 'fee', 'charge', 'kitna', 'paid', 'muft', 'paisa', 'paise', 'rupay', 'rupees'],
