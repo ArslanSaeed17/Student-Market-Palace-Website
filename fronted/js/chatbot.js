@@ -1,365 +1,221 @@
 // ============================================================
 //  Student Market Palace — AI Chatbot Widget
 //  chatbot.js  →  100% client-side, NO backend, NO API key
-//  All answers are pre-built in the Knowledge Base below
 // ============================================================
-/* Floating AI Button */
-#smp-chat-btn{
-position:fixed;
-bottom:28px;
-right:28px;
-z-index:9999;
-
-width:64px;
-height:64px;
-
-border:none;
-border-radius:50%;
-
-background:rgba(124,58,237,.18);
-backdrop-filter:blur(18px);
-
-border:1px solid rgba(255,255,255,.15);
-
-box-shadow:
-0 10px 40px rgba(124,58,237,.35),
-inset 0 0 15px rgba(255,255,255,.08);
-
-cursor:pointer;
-
-display:flex;
-align-items:center;
-justify-content:center;
-
-font-size:28px;
-
-animation:
-floatAI 4s ease-in-out infinite,
-glowAI 3s infinite;
-}
-
-@keyframes floatAI{
-0%,100%{
-transform:translateY(0);
-}
-50%{
-transform:translateY(-8px);
-}
-}
-
-@keyframes glowAI{
-50%{
-box-shadow:
-0 18px 60px rgba(168,85,247,.55);
-}
-}
-
-#smp-chat-btn:hover{
-transform:scale(1.08);
-}
-
-/* Glass Window */
-
-#smp-chat-window{
-
-position:fixed;
-right:28px;
-bottom:105px;
-
-width:370px;
-height:540px;
-
-display:none;
-flex-direction:column;
-
-background:
-linear-gradient(
-135deg,
-rgba(255,255,255,.10),
-rgba(255,255,255,.04)
-);
-
-backdrop-filter:blur(28px);
-
-border:1px solid
-rgba(255,255,255,.12);
-
-border-radius:28px;
-
-overflow:hidden;
-
-box-shadow:
-0 25px 70px rgba(0,0,0,.5);
-
-animation:
-openGlass .45s cubic-bezier(.2,.8,.2,1);
-
-}
-
-#smp-chat-window.open{
-display:flex;
-}
-
-@keyframes openGlass{
-from{
-opacity:0;
-transform:
-translateY(40px)
-scale(.94);
-}
-to{
-opacity:1;
-transform:none;
-}
-}
-
-/* Header */
-
-#smp-chat-header{
-
-padding:18px;
-
-background:
-linear-gradient(
-135deg,
-rgba(124,58,237,.40),
-rgba(0,229,255,.10)
-);
-
-backdrop-filter:blur(30px);
-
-display:flex;
-align-items:center;
-gap:12px;
-
-}
-
-.smp-avatar{
-
-width:42px;
-height:42px;
-
-border-radius:50%;
-
-background:
-linear-gradient(
-135deg,
-#8b5cf6,
-#00e5ff
-);
-
-display:flex;
-align-items:center;
-justify-content:center;
-
-animation:pulseAvatar 2s infinite;
-
-}
-
-@keyframes pulseAvatar{
-
-50%{
-transform:scale(1.08);
-}
-
-}
-
-.smp-title strong{
-color:white;
-font-size:15px;
-}
-
-.smp-title span{
-color:rgba(255,255,255,.65);
-}
-
-/* Messages */
-
-#smp-chat-messages{
-
-flex:1;
-
-padding:18px;
-
-overflow:auto;
-
-display:flex;
-
-flex-direction:column;
-
-gap:12px;
-
-}
-
-.smp-msg{
-
-padding:12px 16px;
-
-max-width:82%;
-
-border-radius:18px;
-
-font-size:14px;
-
-animation:
-messageAppear .25s;
-
-}
-
-@keyframes messageAppear{
-
-from{
-opacity:0;
-transform:translateY(10px);
-}
-
-}
-
-.smp-msg.bot{
-
-background:
-rgba(255,255,255,.08);
-
-color:white;
-
-backdrop-filter:blur(18px);
-
-}
-
-.smp-msg.user{
-
-align-self:flex-end;
-
-background:
-linear-gradient(
-135deg,
-#7c3aed,
-#9333ea
-);
-
-color:white;
-
-}
-
-/* Typing Animation */
-
-.typing{
-
-display:flex;
-
-gap:4px;
-
-padding:12px;
-
-}
-
-.typing span{
-
-width:8px;
-height:8px;
-
-background:#a855f7;
-
-border-radius:50%;
-
-animation:typing 1.2s infinite;
-
-}
-
-.typing span:nth-child(2){
-animation-delay:.2s;
-}
-
-.typing span:nth-child(3){
-animation-delay:.4s;
-}
-
-@keyframes typing{
-
-50%{
-opacity:.25;
-transform:translateY(-4px);
-}
-
-}
-
-/* Input */
-
-#smp-chat-input-row{
-
-padding:14px;
-
-display:flex;
-
-gap:10px;
-
-background:
-rgba(255,255,255,.04);
-
-}
-
-#smp-chat-input{
-
-flex:1;
-
-padding:12px;
-
-border:none;
-
-border-radius:14px;
-
-background:
-rgba(255,255,255,.08);
-
-backdrop-filter:blur(18px);
-
-color:white;
-
-}
-
-#smp-chat-input:focus{
-
-outline:none;
-
-box-shadow:
-0 0 0 2px #8b5cf6;
-
-}
-
-#smp-chat-send{
-
-padding:12px 18px;
-
-border:none;
-
-border-radius:14px;
-
-background:
-linear-gradient(
-135deg,
-#8b5cf6,
-#00e5ff
-);
-
-color:white;
-
-cursor:pointer;
-
-transition:.25s;
-
-}
-
-#smp-chat-send:hover{
-
-transform:scale(1.06);
-
-}
+(function () {
+
+  // ── Inject CSS ───────────────────────────────────────────────
+  const style = document.createElement('style');
+  style.textContent = `
+    #smp-chat-btn {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 9999;
+      width: 64px;
+      height: 64px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(124,58,237,.18);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,.15);
+      box-shadow: 0 10px 40px rgba(124,58,237,.35), inset 0 0 15px rgba(255,255,255,.08);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      animation: floatAI 4s ease-in-out infinite, glowAI 3s infinite;
+    }
+
+    @keyframes floatAI {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+
+    @keyframes glowAI {
+      50% { box-shadow: 0 18px 60px rgba(168,85,247,.55); }
+    }
+
+    #smp-chat-btn:hover { transform: scale(1.08); }
+
+    #smp-chat-window {
+      position: fixed;
+      right: 28px;
+      bottom: 105px;
+      width: 370px;
+      height: 540px;
+      display: none;
+      flex-direction: column;
+      background: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      backdrop-filter: blur(28px);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 25px 70px rgba(0,0,0,.5);
+    }
+
+    #smp-chat-window.open {
+      display: flex;
+      animation: openGlass .45s cubic-bezier(.2,.8,.2,1);
+    }
+
+    @keyframes openGlass {
+      from { opacity: 0; transform: translateY(40px) scale(.94); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    #smp-chat-header {
+      padding: 18px;
+      background: linear-gradient(135deg, rgba(124,58,237,.40), rgba(0,229,255,.10));
+      backdrop-filter: blur(30px);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .smp-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #8b5cf6, #00e5ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulseAvatar 2s infinite;
+    }
+
+    @keyframes pulseAvatar {
+      50% { transform: scale(1.08); }
+    }
+
+    .smp-title strong { color: white; font-size: 15px; display: block; }
+    .smp-title span   { color: rgba(255,255,255,.65); font-size: 12px; }
+
+    #smp-chat-close {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      opacity: .7;
+    }
+    #smp-chat-close:hover { opacity: 1; }
+
+    #smp-chat-messages {
+      flex: 1;
+      padding: 18px;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .smp-msg {
+      padding: 12px 16px;
+      max-width: 82%;
+      border-radius: 18px;
+      font-size: 14px;
+      animation: messageAppear .25s;
+    }
+
+    @keyframes messageAppear {
+      from { opacity: 0; transform: translateY(10px); }
+    }
+
+    .smp-msg.bot {
+      background: rgba(255,255,255,.08);
+      color: white;
+      backdrop-filter: blur(18px);
+    }
+
+    .smp-msg.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, #7c3aed, #9333ea);
+      color: white;
+    }
+
+    .typing { display: flex; gap: 4px; padding: 12px; }
+
+    .typing span {
+      width: 8px; height: 8px;
+      background: #a855f7;
+      border-radius: 50%;
+      animation: typingDot 1.2s infinite;
+    }
+    .typing span:nth-child(2) { animation-delay: .2s; }
+    .typing span:nth-child(3) { animation-delay: .4s; }
+
+    @keyframes typingDot {
+      50% { opacity: .25; transform: translateY(-4px); }
+    }
+
+    #smp-suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 14px 10px;
+    }
+
+    .smp-suggestion {
+      padding: 6px 12px;
+      border: 1px solid rgba(139,92,246,.5);
+      border-radius: 20px;
+      background: rgba(139,92,246,.15);
+      color: white;
+      font-size: 12px;
+      cursor: pointer;
+      transition: .2s;
+    }
+    .smp-suggestion:hover { background: rgba(139,92,246,.35); }
+
+    #smp-chat-input-row {
+      padding: 14px;
+      display: flex;
+      gap: 10px;
+      background: rgba(255,255,255,.04);
+    }
+
+    #smp-chat-input {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 14px;
+      background: rgba(255,255,255,.08);
+      backdrop-filter: blur(18px);
+      color: white;
+      font-size: 14px;
+    }
+
+    #smp-chat-input::placeholder { color: rgba(255,255,255,.4); }
+
+    #smp-chat-input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px #8b5cf6;
+    }
+
+    #smp-chat-send {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #8b5cf6, #00e5ff);
+      color: white;
+      cursor: pointer;
+      transition: .25s;
+      font-size: 14px;
+    }
+
+    #smp-chat-send:hover { transform: scale(1.06); }
+    #smp-chat-send:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  `;
+  document.head.appendChild(style);
 
   // ── Build HTML ───────────────────────────────────────────────
   const btn = document.createElement('button');
   btn.id    = 'smp-chat-btn';
   btn.title = 'Chat with SMP Assistant';
-  btn.innerHTML = '֎🇦🇮';
+  btn.innerHTML = '🤖';
 
   const win = document.createElement('div');
   win.id = 'smp-chat-window';
@@ -374,9 +230,8 @@ transform:scale(1.06);
     </div>
     <div id="smp-chat-messages">
       <div class="smp-msg bot">
-        👋 Assalam o Alaikum! Main SMP Assistant hun❤️.<br><br>
+        👋 Assalam o Alaikum! Main SMP Assistant hun ❤️<br><br>
         Student Market Palace ke baare mein kuch bhi poochh saktay ho — buying, selling, account, ya contact info!
-        Please do not ask irrelevant questions 
       </div>
     </div>
     <div id="smp-suggestions">
@@ -388,16 +243,13 @@ transform:scale(1.06);
     <div id="smp-chat-input-row">
       <input id="smp-chat-input" type="text" placeholder="Kuch poochho…" autocomplete="off" maxlength="400"/>
       <button id="smp-chat-send">Send ➤</button>
-    </div>`;
+    </div>
+  `;
 
   document.body.appendChild(btn);
   document.body.appendChild(win);
 
   // ── Knowledge Base ───────────────────────────────────────────
-  // Add more entries here anytime — just follow the same pattern.
-  // keywords: any word/phrase the user might type (lowercase)
-  // answer:   the reply shown in the chat (use \n for new lines)
-  // ─────────────────────────────────────────────────────────────
   const KB = [
     {
       keywords: ['sell', 'selling', 'bechna', 'becho', 'list', 'listing', 'post ad', 'add product', 'apload', 'upload'],
@@ -409,7 +261,7 @@ transform:scale(1.06);
     },
     {
       keywords: ['contact', 'email', 'whatsapp', 'reach', 'support', 'help', 'helpline', 'admin', 'sampark'],
-      answer: '📬 Contact SMP Support:\n\n📧 Email: arslanbrall@gmail.com \n💬 WhatsApp: +92-300-8971489\n🕐 Available: Mon–Sat, 9am–6pm\n\nYou can also use the "Contact Seller" button on any product listing to reach the seller directly.'
+      answer: '📬 Contact SMP Support:\n\n📧 Email: arslanbrall@gmail.com\n💬 WhatsApp: +92-300-8971489\n🕐 Available: Mon–Sat, 9am–6pm\n\nYou can also use the "Contact Seller" button on any product listing to reach the seller directly.'
     },
     {
       keywords: ['free', 'cost', 'price', 'fee', 'charge', 'kitna', 'paid', 'muft', 'paisa', 'paise', 'rupay', 'rupees'],
@@ -417,7 +269,7 @@ transform:scale(1.06);
     },
     {
       keywords: ['safety', 'safe', 'scam', 'fraud', 'tips', 'secure', 'dhoka', 'trust', 'fake'],
-      answer: '🛡️ Student Safety Tips:\n\n• Always meet in a public place (on campus is best)\n• Never pay in advance without seeing the item\n• Verify the seller on WhatsApp before meeting\n• Do NOT share your bank account or CNIC details\n• Prefer cash payment on delivery\n• Report fake listings to admin immediately\n\n🚨 Suspicious? Email: report@studentmarketpalace.com'
+      answer: '🛡️ Student Safety Tips:\n\n• Always meet in a public place (on campus is best)\n• Never pay in advance without seeing the item\n• Verify the seller on WhatsApp before meeting\n• Do NOT share your bank account or CNIC details\n• Prefer cash payment on delivery\n• Report fake listings to admin immediately\n\n🚨 Suspicious? Email: arslanbrall@gmail.com'
     },
     {
       keywords: ['account', 'register', 'signup', 'sign up', 'login', 'log in', 'profile', 'register karna', 'banana'],
@@ -449,27 +301,17 @@ transform:scale(1.06);
     },
   ];
 
-  // Default reply when no keyword matches
-  const FALLBACK = '🤔 Mujhe samajh nahi aaya!\n\nAap yeh cheezain poochh saktay ho:\n• Selling / Buying\n• Account banana\n• Contact info\n• Safety tips\n• Categories\n• Fees / Cost\n\nYa seedha email karein: support@studentmarketpalace.com';
+  const FALLBACK = '🤔 Mujhe samajh nahi aaya!\n\nAap yeh cheezain poochh saktay ho:\n• Selling / Buying\n• Account banana\n• Contact info\n• Safety tips\n• Categories\n• Fees / Cost\n\nYa seedha email karein: arslanbrall@gmail.com';
 
-  // ── Matcher Function ─────────────────────────────────────────
-  // Lowercases the input and checks each KB entry for a keyword match.
-  // Returns the first matching answer, or the FALLBACK string.
+  // ── Matcher ──────────────────────────────────────────────────
   function getReply(userText) {
     const lower = userText.toLowerCase().trim();
-    // Empty input guard
     if (!lower) return '😊 Kuch to likho! Main help karne ke liye yahan hun.';
-
     for (const entry of KB) {
-      if (entry.keywords.some(kw => lower.includes(kw))) {
-        return entry.answer;
-      }
+      if (entry.keywords.some(kw => lower.includes(kw))) return entry.answer;
     }
     return FALLBACK;
   }
-
-  // ── State ────────────────────────────────────────────────────
-  const chatHistory = [];
 
   // ── Events ───────────────────────────────────────────────────
   btn.addEventListener('click', () => {
@@ -489,12 +331,10 @@ transform:scale(1.06);
     if (e.key === 'Enter' && !e.shiftKey) sendMessage();
   });
 
-  // Suggested questions — click to autofill and send
   document.getElementById('smp-suggestions').addEventListener('click', e => {
     if (e.target.classList.contains('smp-suggestion')) {
       const input = document.getElementById('smp-chat-input');
       input.value = e.target.textContent;
-      // Hide suggestions after first use
       document.getElementById('smp-suggestions').style.display = 'none';
       sendMessage();
     }
@@ -507,26 +347,24 @@ transform:scale(1.06);
     const text    = input.value.trim();
     if (!text || sendBtn.disabled) return;
 
-    // Hide suggestions once conversation starts
     document.getElementById('smp-suggestions').style.display = 'none';
-
     input.value      = '';
     sendBtn.disabled = true;
 
     appendMessage(text, 'user');
-    chatHistory.push({ role: 'user', content: text });
 
-    const typingEl = appendMessage('⏳ Typing…', 'bot typing');
+    // Typing indicator
+    const typingEl = document.createElement('div');
+    typingEl.className = 'smp-msg bot typing';
+    typingEl.innerHTML = '<span></span><span></span><span></span>';
+    const msgs = document.getElementById('smp-chat-messages');
+    msgs.appendChild(typingEl);
+    msgs.scrollTop = msgs.scrollHeight;
 
-    // Small delay so it feels natural (no backend = instant otherwise)
-    await new Promise(resolve => setTimeout(resolve, 450));
-
+    await new Promise(r => setTimeout(r, 500));
     typingEl.remove();
 
-    const reply = getReply(text);
-    appendMessage(reply, 'bot');
-    chatHistory.push({ role: 'assistant', content: reply });
-
+    appendMessage(getReply(text), 'bot');
     sendBtn.disabled = false;
     input.focus();
   }
@@ -542,4 +380,4 @@ transform:scale(1.06);
     return el;
   }
 
-})(); // IIFE — no global variables leaked
+})();
