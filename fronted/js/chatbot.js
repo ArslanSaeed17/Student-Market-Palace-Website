@@ -1,383 +1,617 @@
-// ============================================================
-//  Student Market Palace — AI Chatbot Widget
-//  chatbot.js  →  100% client-side, NO backend, NO API key
+//  Student Market Palace — Chatbot Widget  v3.0
+//  Fixed: position, z-index, events, scroll, send
+//  New: dancing bot, glassmorphism UI, smooth animations
 // ============================================================
 (function () {
+  'use strict';
 
-  // ── Inject CSS ───────────────────────────────────────────────
-  const style = document.createElement('style');
-  style.textContent = `
-    #smp-chat-btn {
-      position: fixed;
-      bottom: 28px;
-      right: 28px;
-      z-index: 9999;
-      width: 64px;
-      height: 64px;
-      border: none;
+  // ── Inject CSS ──────────────────────────────────────────────
+  const css = `
+    #smp-fab {
+      position: fixed !important;
+      bottom: 32px !important;
+      right: 32px !important;
+      z-index: 2147483647 !important;
+      width: 68px;
+      height: 68px;
       border-radius: 50%;
-      background: rgba(124,58,237,.18);
-      backdrop-filter: blur(18px);
-      border: 1px solid rgba(255,255,255,.15);
-      box-shadow: 0 10px 40px rgba(124,58,237,.35), inset 0 0 15px rgba(255,255,255,.08);
+      border: none;
       cursor: pointer;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      background: linear-gradient(135deg, #7c3aed, #a855f7, #06b6d4);
+      background-size: 200% 200%;
+      box-shadow: 0 8px 32px rgba(124,58,237,0.55), 0 0 0 0 rgba(168,85,247,0.4);
+      animation: smp-dance 1.8s ease-in-out infinite, smp-gradshift 3s ease infinite, smp-pulse-ring 2s ease-out infinite;
+      transform-origin: center;
+      transition: transform 0.2s;
+    }
+
+    #smp-fab:hover {
+      transform: scale(1.15) rotate(-5deg) !important;
+      box-shadow: 0 12px 48px rgba(124,58,237,0.75), 0 0 60px rgba(168,85,247,0.4);
+    }
+
+    @keyframes smp-dance {
+      0%   { transform: translateY(0px) rotate(0deg); }
+      15%  { transform: translateY(-12px) rotate(-8deg); }
+      30%  { transform: translateY(-6px) rotate(6deg); }
+      45%  { transform: translateY(-14px) rotate(-5deg); }
+      60%  { transform: translateY(-4px) rotate(4deg); }
+      75%  { transform: translateY(-10px) rotate(-3deg); }
+      90%  { transform: translateY(-2px) rotate(2deg); }
+      100% { transform: translateY(0px) rotate(0deg); }
+    }
+
+    @keyframes smp-gradshift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes smp-pulse-ring {
+      0%   { box-shadow: 0 8px 32px rgba(124,58,237,0.55), 0 0 0 0 rgba(168,85,247,0.5); }
+      70%  { box-shadow: 0 8px 32px rgba(124,58,237,0.55), 0 0 0 18px rgba(168,85,247,0); }
+      100% { box-shadow: 0 8px 32px rgba(124,58,237,0.55), 0 0 0 0 rgba(168,85,247,0); }
+    }
+
+    #smp-fab .smp-fab-emoji {
+      display: block;
+      animation: smp-emoji-bounce 1.8s ease-in-out infinite;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+    }
+
+    @keyframes smp-emoji-bounce {
+      0%,100% { transform: scale(1) rotate(0deg); }
+      25%     { transform: scale(1.2) rotate(-10deg); }
+      50%     { transform: scale(0.95) rotate(8deg); }
+      75%     { transform: scale(1.1) rotate(-5deg); }
+    }
+
+    #smp-fab .smp-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 20px;
+      height: 20px;
+      background: #f43f5e;
+      border-radius: 50%;
+      border: 2px solid white;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 28px;
-      animation: floatAI 4s ease-in-out infinite, glowAI 3s infinite;
+      font-size: 10px;
+      color: white;
+      font-weight: bold;
+      animation: smp-badge-pop 1s ease infinite alternate;
     }
 
-    @keyframes floatAI {
-      0%,100% { transform: translateY(0); }
-      50%      { transform: translateY(-8px); }
+    @keyframes smp-badge-pop {
+      from { transform: scale(1); }
+      to   { transform: scale(1.2); }
     }
 
-    @keyframes glowAI {
-      50% { box-shadow: 0 18px 60px rgba(168,85,247,.55); }
-    }
-
-    #smp-chat-btn:hover { transform: scale(1.08); }
-
-    #smp-chat-window {
-      position: fixed;
-      right: 28px;
-      bottom: 105px;
-      width: 370px;
-      height: 540px;
+    /* ── Chat Window ── */
+    #smp-win {
+      position: fixed !important;
+      bottom: 115px !important;
+      right: 32px !important;
+      z-index: 2147483646 !important;
+      width: 360px;
+      height: 560px;
       display: none;
       flex-direction: column;
-      background: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
-      backdrop-filter: blur(28px);
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 28px;
+      border-radius: 24px;
       overflow: hidden;
-      box-shadow: 0 25px 70px rgba(0,0,0,.5);
+      background: rgba(15, 10, 30, 0.85);
+      backdrop-filter: blur(32px) saturate(180%);
+      -webkit-backdrop-filter: blur(32px) saturate(180%);
+      border: 1px solid rgba(168, 85, 247, 0.25);
+      box-shadow:
+        0 32px 80px rgba(0,0,0,0.6),
+        0 0 0 1px rgba(255,255,255,0.05) inset,
+        0 0 60px rgba(124,58,237,0.15) inset;
     }
 
-    #smp-chat-window.open {
-      display: flex;
-      animation: openGlass .45s cubic-bezier(.2,.8,.2,1);
+    #smp-win.smp-open {
+      display: flex !important;
+      animation: smp-window-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
-    @keyframes openGlass {
-      from { opacity: 0; transform: translateY(40px) scale(.94); }
-      to   { opacity: 1; transform: none; }
+    @keyframes smp-window-in {
+      0%   { opacity: 0; transform: scale(0.7) translateY(40px); transform-origin: bottom right; }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
     }
 
-    #smp-chat-header {
-      padding: 18px;
-      background: linear-gradient(135deg, rgba(124,58,237,.40), rgba(0,229,255,.10));
-      backdrop-filter: blur(30px);
+    @keyframes smp-window-out {
+      0%   { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.7) translateY(40px); transform-origin: bottom right; }
+    }
+
+    /* ── Header ── */
+    #smp-header {
+      padding: 16px 18px;
+      background: linear-gradient(135deg, rgba(124,58,237,0.6), rgba(6,182,212,0.2));
+      border-bottom: 1px solid rgba(255,255,255,0.08);
       display: flex;
       align-items: center;
       gap: 12px;
+      flex-shrink: 0;
     }
 
-    .smp-avatar {
-      width: 42px;
-      height: 42px;
+    #smp-header .smp-h-avatar {
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #8b5cf6, #00e5ff);
+      background: linear-gradient(135deg, #8b5cf6, #06b6d4);
       display: flex;
       align-items: center;
       justify-content: center;
-      animation: pulseAvatar 2s infinite;
+      font-size: 22px;
+      animation: smp-avatar-spin 6s ease-in-out infinite;
+      box-shadow: 0 0 20px rgba(139,92,246,0.5);
+      flex-shrink: 0;
     }
 
-    @keyframes pulseAvatar {
-      50% { transform: scale(1.08); }
+    @keyframes smp-avatar-spin {
+      0%,100% { transform: rotate(0deg) scale(1); }
+      25%     { transform: rotate(-8deg) scale(1.05); }
+      75%     { transform: rotate(8deg) scale(1.05); }
     }
 
-    .smp-title strong { color: white; font-size: 15px; display: block; }
-    .smp-title span   { color: rgba(255,255,255,.65); font-size: 12px; }
+    #smp-header .smp-h-info { flex: 1; overflow: hidden; }
+    #smp-header .smp-h-name { color: white; font-weight: 700; font-size: 15px; font-family: sans-serif; }
+    #smp-header .smp-h-status {
+      color: rgba(255,255,255,0.6);
+      font-size: 12px;
+      font-family: sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 2px;
+    }
 
-    #smp-chat-close {
-      margin-left: auto;
-      background: none;
-      border: none;
-      color: white;
-      font-size: 18px;
+    .smp-dot {
+      width: 7px; height: 7px;
+      background: #22c55e;
+      border-radius: 50%;
+      animation: smp-dot-pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes smp-dot-pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%     { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    #smp-close-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.8);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
       cursor: pointer;
-      opacity: .7;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
     }
-    #smp-chat-close:hover { opacity: 1; }
 
-    #smp-chat-messages {
+    #smp-close-btn:hover {
+      background: rgba(244,63,94,0.3);
+      border-color: #f43f5e;
+      color: white;
+      transform: rotate(90deg);
+    }
+
+    /* ── Messages ── */
+    #smp-msgs {
       flex: 1;
-      padding: 18px;
-      overflow: auto;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
+      scroll-behavior: smooth;
     }
 
-    .smp-msg {
-      padding: 12px 16px;
-      max-width: 82%;
+    #smp-msgs::-webkit-scrollbar { width: 4px; }
+    #smp-msgs::-webkit-scrollbar-track { background: transparent; }
+    #smp-msgs::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.4); border-radius: 4px; }
+
+    .smp-m {
+      max-width: 85%;
+      padding: 11px 15px;
       border-radius: 18px;
-      font-size: 14px;
-      animation: messageAppear .25s;
+      font-size: 13.5px;
+      line-height: 1.55;
+      font-family: sans-serif;
+      animation: smp-msg-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      word-wrap: break-word;
     }
 
-    @keyframes messageAppear {
-      from { opacity: 0; transform: translateY(10px); }
+    @keyframes smp-msg-in {
+      0%   { opacity: 0; transform: translateY(15px) scale(0.9); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .smp-msg.bot {
-      background: rgba(255,255,255,.08);
-      color: white;
-      backdrop-filter: blur(18px);
+    .smp-m.bot {
+      align-self: flex-start;
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.92);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-bottom-left-radius: 4px;
     }
 
-    .smp-msg.user {
+    .smp-m.user {
       align-self: flex-end;
-      background: linear-gradient(135deg, #7c3aed, #9333ea);
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
       color: white;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 4px 20px rgba(124,58,237,0.4);
     }
 
-    .typing { display: flex; gap: 4px; padding: 12px; }
+    /* Typing dots */
+    .smp-typing {
+      align-self: flex-start;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 12px 16px;
+      border-radius: 18px;
+      border-bottom-left-radius: 4px;
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
 
-    .typing span {
-      width: 8px; height: 8px;
+    .smp-typing span {
+      width: 7px; height: 7px;
       background: #a855f7;
       border-radius: 50%;
-      animation: typingDot 1.2s infinite;
+      display: block;
+      animation: smp-tdot 1.2s ease-in-out infinite;
     }
-    .typing span:nth-child(2) { animation-delay: .2s; }
-    .typing span:nth-child(3) { animation-delay: .4s; }
+    .smp-typing span:nth-child(2) { animation-delay: 0.2s; }
+    .smp-typing span:nth-child(3) { animation-delay: 0.4s; }
 
-    @keyframes typingDot {
-      50% { opacity: .25; transform: translateY(-4px); }
+    @keyframes smp-tdot {
+      0%,60%,100% { transform: translateY(0); opacity: 0.4; }
+      30%         { transform: translateY(-6px); opacity: 1; }
     }
 
-    #smp-suggestions {
+    /* ── Suggestions ── */
+    #smp-sugg {
+      padding: 8px 12px;
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      padding: 0 14px 10px;
+      gap: 6px;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(255,255,255,0.05);
     }
 
-    .smp-suggestion {
-      padding: 6px 12px;
-      border: 1px solid rgba(139,92,246,.5);
+    .smp-sq {
+      padding: 5px 11px;
+      background: rgba(124,58,237,0.2);
+      border: 1px solid rgba(168,85,247,0.35);
       border-radius: 20px;
-      background: rgba(139,92,246,.15);
-      color: white;
+      color: rgba(255,255,255,0.85);
       font-size: 12px;
       cursor: pointer;
-      transition: .2s;
+      font-family: sans-serif;
+      transition: all 0.2s;
     }
-    .smp-suggestion:hover { background: rgba(139,92,246,.35); }
 
-    #smp-chat-input-row {
-      padding: 14px;
+    .smp-sq:hover {
+      background: rgba(168,85,247,0.4);
+      border-color: #a855f7;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(124,58,237,0.3);
+    }
+
+    /* ── Input Row ── */
+    #smp-input-row {
+      padding: 12px 14px;
       display: flex;
-      gap: 10px;
-      background: rgba(255,255,255,.04);
+      gap: 8px;
+      align-items: center;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      background: rgba(0,0,0,0.2);
+      flex-shrink: 0;
     }
 
-    #smp-chat-input {
+    #smp-input {
       flex: 1;
-      padding: 12px;
-      border: none;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
       border-radius: 14px;
-      background: rgba(255,255,255,.08);
-      backdrop-filter: blur(18px);
       color: white;
-      font-size: 14px;
-    }
-
-    #smp-chat-input::placeholder { color: rgba(255,255,255,.4); }
-
-    #smp-chat-input:focus {
+      font-size: 13.5px;
+      font-family: sans-serif;
       outline: none;
-      box-shadow: 0 0 0 2px #8b5cf6;
+      transition: all 0.2s;
+      min-width: 0;
     }
 
-    #smp-chat-send {
-      padding: 12px 18px;
+    #smp-input:focus {
+      background: rgba(255,255,255,0.11);
+      border-color: rgba(168,85,247,0.6);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.2);
+    }
+
+    #smp-input::placeholder { color: rgba(255,255,255,0.3); }
+
+    #smp-send {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
       border: none;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #8b5cf6, #00e5ff);
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
       color: white;
+      font-size: 16px;
       cursor: pointer;
-      transition: .25s;
-      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      box-shadow: 0 4px 16px rgba(124,58,237,0.4);
     }
 
-    #smp-chat-send:hover { transform: scale(1.06); }
-    #smp-chat-send:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    #smp-send:hover { transform: scale(1.1) rotate(-10deg); box-shadow: 0 6px 24px rgba(124,58,237,0.6); }
+    #smp-send:active { transform: scale(0.95); }
+    #smp-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   `;
-  document.head.appendChild(style);
 
-  // ── Build HTML ───────────────────────────────────────────────
-  const btn = document.createElement('button');
-  btn.id    = 'smp-chat-btn';
-  btn.title = 'Chat with SMP Assistant';
-  btn.innerHTML = '🤖';
+  const styleEl = document.createElement('style');
+  styleEl.textContent = css;
+  document.head.appendChild(styleEl);
 
+  // ── Build HTML ──────────────────────────────────────────────
+  // FAB Button
+  const fab = document.createElement('button');
+  fab.id = 'smp-fab';
+  fab.setAttribute('aria-label', 'Open SMP Chat');
+  fab.innerHTML = `
+    <span class="smp-fab-emoji">🤖</span>
+    <div class="smp-badge">1</div>
+  `;
+
+  // Chat Window
   const win = document.createElement('div');
-  win.id = 'smp-chat-window';
+  win.id = 'smp-win';
   win.innerHTML = `
-    <div id="smp-chat-header">
-      <div class="smp-avatar">🤖</div>
-      <div class="smp-title">
-        <strong>SMP Assistant</strong>
-        <span>Student Market Palace · Online</span>
+    <div id="smp-header">
+      <div class="smp-h-avatar">🤖</div>
+      <div class="smp-h-info">
+        <div class="smp-h-name">SMP Assistant</div>
+        <div class="smp-h-status">
+          <div class="smp-dot"></div>
+          <span>Student Market Palace · Online</span>
+        </div>
       </div>
-      <button id="smp-chat-close" title="Close">✕</button>
+      <button id="smp-close-btn" aria-label="Close chat">✕</button>
     </div>
-    <div id="smp-chat-messages">
-      <div class="smp-msg bot">
-        👋 Assalam o Alaikum! Main SMP Assistant hun ❤️<br><br>
-        Student Market Palace ke baare mein kuch bhi poochh saktay ho — buying, selling, account, ya contact info!
+    <div id="smp-msgs">
+      <div class="smp-m bot">
+        👋 <strong>Assalam o Alaikum!</strong><br><br>
+        Main SMP Assistant hun ❤️<br>
+        Buying, selling, account, ya koi bhi cheez poochho — main yahan hun!
       </div>
     </div>
-    <div id="smp-suggestions">
-      <button class="smp-suggestion">How to sell?</button>
-      <button class="smp-suggestion">Contact info</button>
-      <button class="smp-suggestion">Kitna free hai?</button>
-      <button class="smp-suggestion">Safety tips</button>
+    <div id="smp-sugg">
+      <button class="smp-sq">🛒 How to sell?</button>
+      <button class="smp-sq">📬 Contact info</button>
+      <button class="smp-sq">💰 Kitna free hai?</button>
+      <button class="smp-sq">🛡️ Safety tips</button>
     </div>
-    <div id="smp-chat-input-row">
-      <input id="smp-chat-input" type="text" placeholder="Kuch poochho…" autocomplete="off" maxlength="400"/>
-      <button id="smp-chat-send">Send ➤</button>
+    <div id="smp-input-row">
+      <input id="smp-input" type="text" placeholder="Kuch poochho…" maxlength="400" autocomplete="off" />
+      <button id="smp-send" aria-label="Send">➤</button>
     </div>
   `;
 
-  document.body.appendChild(btn);
+  document.body.appendChild(fab);
   document.body.appendChild(win);
 
-  // ── Knowledge Base ───────────────────────────────────────────
+  // ── Knowledge Base ──────────────────────────────────────────
   const KB = [
     {
-      keywords: ['sell', 'selling', 'bechna', 'becho', 'list', 'listing', 'post ad', 'add product', 'apload', 'upload'],
-      answer: '🛒 Selling on SMP is very easy!\n\n1. Click "Post Ad" on the homepage\n2. Choose a category for your item\n3. Add title, price, photos & description\n4. Enter your WhatsApp or email for buyers\n5. Submit — your listing goes live instantly!\n\n✅ Completely FREE for all students.'
+      keywords: ['sell','selling','bechna','becho','list','listing','post ad','add product','upload','apload'],
+      answer: '🛒 <strong>Selling is super easy!</strong><br><br>1️⃣ Click "Post Ad" on homepage<br>2️⃣ Choose a category<br>3️⃣ Add title, price, photos & description<br>4️⃣ Enter your WhatsApp/email<br>5️⃣ Submit — goes live instantly!<br><br>✅ <strong>Completely FREE for all students!</strong>'
     },
     {
-      keywords: ['buy', 'buying', 'kharidna', 'purchase', 'order', 'khareedna', 'khareed'],
-      answer: '🔍 Buying on SMP is simple:\n\n1. Browse or search listings on the homepage\n2. Click any product to see full details\n3. Hit "Contact Seller" to reach them via WhatsApp or Gmail\n4. Agree on a price and meet safely on campus\n\n💡 No online payment needed — all deals are direct between students!'
+      keywords: ['buy','buying','kharidna','purchase','order','khareedna','khareed'],
+      answer: '🔍 <strong>Buying on SMP:</strong><br><br>1️⃣ Browse or search listings<br>2️⃣ Click product to see details<br>3️⃣ Hit "Contact Seller" (WhatsApp/Email)<br>4️⃣ Agree on price, meet safely on campus<br><br>💡 No online payment — direct student deals!'
     },
     {
-      keywords: ['contact', 'email', 'whatsapp', 'reach', 'support', 'help', 'helpline', 'admin', 'sampark'],
-      answer: '📬 Contact SMP Support:\n\n📧 Email: arslanbrall@gmail.com\n💬 WhatsApp: +92-300-8971489\n🕐 Available: Mon–Sat, 9am–6pm\n\nYou can also use the "Contact Seller" button on any product listing to reach the seller directly.'
+      keywords: ['contact','email','whatsapp','reach','support','help','helpline','admin'],
+      answer: '📬 <strong>SMP Support:</strong><br><br>📧 arslanbrall@gmail.com<br>💬 WhatsApp: +92-300-8971489<br>🕐 Mon–Sat, 9am–6pm<br><br>Or use "Contact Seller" on any listing!'
     },
     {
-      keywords: ['free', 'cost', 'price', 'fee', 'charge', 'kitna', 'paid', 'muft', 'paisa', 'paise', 'rupay', 'rupees'],
-      answer: '✅ Student Market Palace is 100% FREE!\n\n• No listing fee\n• No commission on sales\n• No hidden charges\n• No subscription needed\n\nJust register with your student email and start buying or selling!'
+      keywords: ['free','cost','price','fee','charge','kitna','paid','muft','paisa','paise','rupay','rupees'],
+      answer: '✅ <strong>100% FREE!</strong><br><br>• No listing fee<br>• No commission<br>• No hidden charges<br>• No subscription<br><br>Just register with your student email and go!'
     },
     {
-      keywords: ['safety', 'safe', 'scam', 'fraud', 'tips', 'secure', 'dhoka', 'trust', 'fake'],
-      answer: '🛡️ Student Safety Tips:\n\n• Always meet in a public place (on campus is best)\n• Never pay in advance without seeing the item\n• Verify the seller on WhatsApp before meeting\n• Do NOT share your bank account or CNIC details\n• Prefer cash payment on delivery\n• Report fake listings to admin immediately\n\n🚨 Suspicious? Email: arslanbrall@gmail.com'
+      keywords: ['safety','safe','scam','fraud','tips','secure','dhoka','trust','fake'],
+      answer: '🛡️ <strong>Safety Tips:</strong><br><br>• Meet in a public / on-campus place<br>• Never pay in advance<br>• Verify seller on WhatsApp first<br>• Don\'t share CNIC or bank details<br>• Prefer cash on delivery<br>• Report fakes to admin instantly<br><br>🚨 Suspicious? Email us!'
     },
     {
-      keywords: ['account', 'register', 'signup', 'sign up', 'login', 'log in', 'profile', 'register karna', 'banana'],
-      answer: '👤 Creating an account is quick:\n\n1. Click "Register" in the top navigation\n2. Enter your name and student email\n3. Set a strong password\n4. Verify your email (check inbox/spam)\n5. Done! You can now post listings.\n\n💡 Already registered? Click "Login" and enter your credentials.'
+      keywords: ['account','register','signup','sign up','login','log in','profile'],
+      answer: '👤 <strong>Create Account:</strong><br><br>1️⃣ Click "Register" in navigation<br>2️⃣ Enter name & student email<br>3️⃣ Set strong password<br>4️⃣ Verify email (check spam too!)<br>5️⃣ Done — start posting!<br><br>💡 Already registered? Just click Login!'
     },
     {
-      keywords: ['delete', 'remove', 'edit', 'update', 'change', 'modify', 'hatana', 'badalna'],
-      answer: '✏️ To edit or delete a listing:\n\n1. Log into your account\n2. Click your profile icon → "My Listings"\n3. Find the item you want to change\n4. Click ✏️ Edit to update details\n   OR 🗑️ Delete to remove it\n\n⏰ Note: Listings automatically expire after 30 days.'
+      keywords: ['delete','remove','edit','update','change','modify','hatana','badalna'],
+      answer: '✏️ <strong>Edit / Delete listing:</strong><br><br>1️⃣ Log in to your account<br>2️⃣ Profile icon → "My Listings"<br>3️⃣ Find your item<br>4️⃣ ✏️ Edit OR 🗑️ Delete<br><br>⏰ Listings auto-expire after 30 days.'
     },
     {
-      keywords: ['category', 'categories', 'books', 'electronics', 'clothes', 'notes', 'uniform', 'laptop', 'mobile', 'phone'],
-      answer: '📦 Available categories on SMP:\n\n📚 Books & Notes\n💻 Electronics & Gadgets\n👕 Clothes & Uniforms\n🛋️ Dorm & Room Items\n🎮 Games & Hobbies\n🍱 Food & Snacks\n🧪 Lab Equipment\n📐 Stationery & Supplies\n\nMore categories being added soon!'
+      keywords: ['category','categories','books','electronics','clothes','notes','uniform','laptop','mobile','phone'],
+      answer: '📦 <strong>Available Categories:</strong><br><br>📚 Books & Notes<br>💻 Electronics & Gadgets<br>👕 Clothes & Uniforms<br>🛋️ Dorm & Room Items<br>🎮 Games & Hobbies<br>🍱 Food & Snacks<br>🧪 Lab Equipment<br>📐 Stationery & Supplies<br><br>More coming soon!'
     },
     {
-      keywords: ['password', 'forgot', 'reset', 'bhool', 'bhool gaya', 'change password'],
-      answer: '🔑 Forgot your password?\n\n1. Click "Login" on the homepage\n2. Click "Forgot Password?" below the form\n3. Enter your registered email\n4. Check your inbox for a reset link\n5. Click the link and set a new password\n\n📧 Didn\'t get the email? Check your spam folder or contact support.'
+      keywords: ['password','forgot','reset','bhool','change password'],
+      answer: '🔑 <strong>Forgot Password?</strong><br><br>1️⃣ Click Login → "Forgot Password?"<br>2️⃣ Enter registered email<br>3️⃣ Check inbox for reset link<br>4️⃣ Set new password<br><br>📧 No email? Check spam or contact us!'
     },
     {
-      keywords: ['search', 'find', 'dhundna', 'dhundo', 'item', 'product', 'kahan'],
-      answer: '🔎 How to search on SMP:\n\n• Use the Search Bar at the top of the homepage\n• Type the item name (e.g. "calculus book", "HP laptop")\n• Filter results by category, price range, or location\n• Sort by Newest or Lowest Price\n\n💡 Tip: Use simple keywords for best results!'
+      keywords: ['search','find','dhundna','dhundo','item','product','kahan'],
+      answer: '🔎 <strong>Search on SMP:</strong><br><br>• Use the Search Bar at top of homepage<br>• Filter by category, price, location<br>• Sort by Newest or Lowest Price<br><br>💡 Use simple keywords for best results!'
     },
     {
-      keywords: ['photo', 'image', 'picture', 'tasveer', 'upload photo', 'add photo'],
-      answer: '📷 Adding photos to your listing:\n\n• You can upload up to 5 photos per listing\n• Accepted formats: JPG, PNG, WEBP\n• Max size: 5MB per photo\n• Good photos = faster sales!\n\n💡 Tip: Take photos in natural daylight for best quality.'
+      keywords: ['photo','image','picture','tasveer','upload photo','add photo'],
+      answer: '📷 <strong>Adding Photos:</strong><br><br>• Up to 5 photos per listing<br>• Formats: JPG, PNG, WEBP<br>• Max 5MB per photo<br><br>💡 Natural daylight = best quality photos!'
     },
     {
-      keywords: ['smp', 'student market palace', 'kya hai', 'what is', 'about', 'ke baare', 'platform'],
-      answer: '🎓 About Student Market Palace (SMP):\n\nSMP is a free online marketplace built exclusively for university students.\n\n✅ Buy & sell used books, electronics, clothes and more\n✅ Connect directly with fellow students\n✅ Safe, simple, and completely free\n✅ No middleman — deal directly!\n\nBuilt by students, for students. 🚀'
+      keywords: ['smp','student market palace','kya hai','what is','about','platform'],
+      answer: '🎓 <strong>About SMP:</strong><br><br>Student Market Palace is a FREE marketplace built for university students!<br><br>✅ Buy & sell books, electronics, clothes & more<br>✅ Connect directly with fellow students<br>✅ Safe, simple, 100% free<br>✅ No middleman!<br><br>🚀 Built by students, for students!'
     },
   ];
 
-  const FALLBACK = '🤔 Mujhe samajh nahi aaya!\n\nAap yeh cheezain poochh saktay ho:\n• Selling / Buying\n• Account banana\n• Contact info\n• Safety tips\n• Categories\n• Fees / Cost\n\nYa seedha email karein: arslanbrall@gmail.com';
+  const FALLBACK = '🤔 <strong>Samajh nahi aaya!</strong><br><br>Yeh poochh saktay ho:<br>• 🛒 Selling / Buying<br>• 👤 Account banana<br>• 📬 Contact info<br>• 🛡️ Safety tips<br>• 📦 Categories<br>• 💰 Fees / Cost<br><br>📧 arslanbrall@gmail.com';
 
-  // ── Matcher ──────────────────────────────────────────────────
-  function getReply(userText) {
-    const lower = userText.toLowerCase().trim();
-    if (!lower) return '😊 Kuch to likho! Main help karne ke liye yahan hun.';
-    for (const entry of KB) {
-      if (entry.keywords.some(kw => lower.includes(kw))) return entry.answer;
+  function getReply(txt) {
+    const lower = txt.toLowerCase().trim();
+    if (!lower) return '😊 Kuch to likho! Main yahan hun!';
+    for (const e of KB) {
+      if (e.keywords.some(kw => lower.includes(kw))) return e.answer;
     }
     return FALLBACK;
   }
 
-  // ── Events ───────────────────────────────────────────────────
-  btn.addEventListener('click', () => {
-    win.classList.toggle('open');
-    if (win.classList.contains('open')) {
-      document.getElementById('smp-chat-input').focus();
-    }
-  });
+  // ── Toggle Logic ────────────────────────────────────────────
+  let isOpen = false;
 
-  document.getElementById('smp-chat-close').addEventListener('click', () => {
-    win.classList.remove('open');
-  });
-
-  document.getElementById('smp-chat-send').addEventListener('click', sendMessage);
-
-  document.getElementById('smp-chat-input').addEventListener('keypress', e => {
-    if (e.key === 'Enter' && !e.shiftKey) sendMessage();
-  });
-
-  document.getElementById('smp-suggestions').addEventListener('click', e => {
-    if (e.target.classList.contains('smp-suggestion')) {
-      const input = document.getElementById('smp-chat-input');
-      input.value = e.target.textContent;
-      document.getElementById('smp-suggestions').style.display = 'none';
-      sendMessage();
-    }
-  });
-
-  // ── Send Message ─────────────────────────────────────────────
-  async function sendMessage() {
-    const input   = document.getElementById('smp-chat-input');
-    const sendBtn = document.getElementById('smp-chat-send');
-    const text    = input.value.trim();
-    if (!text || sendBtn.disabled) return;
-
-    document.getElementById('smp-suggestions').style.display = 'none';
-    input.value      = '';
-    sendBtn.disabled = true;
-
-    appendMessage(text, 'user');
-
-    // Typing indicator
-    const typingEl = document.createElement('div');
-    typingEl.className = 'smp-msg bot typing';
-    typingEl.innerHTML = '<span></span><span></span><span></span>';
-    const msgs = document.getElementById('smp-chat-messages');
-    msgs.appendChild(typingEl);
-    msgs.scrollTop = msgs.scrollHeight;
-
-    await new Promise(r => setTimeout(r, 500));
-    typingEl.remove();
-
-    appendMessage(getReply(text), 'bot');
-    sendBtn.disabled = false;
-    input.focus();
+  function openChat() {
+    isOpen = true;
+    win.style.display = 'flex';
+    win.classList.add('smp-open');
+    // Remove notification badge
+    const badge = fab.querySelector('.smp-badge');
+    if (badge) badge.style.display = 'none';
+    // Focus input after animation
+    setTimeout(() => {
+      const inp = document.getElementById('smp-input');
+      if (inp) inp.focus();
+    }, 420);
   }
 
-  // ── Helper ───────────────────────────────────────────────────
-  function appendMessage(text, cls) {
-    const msgs = document.getElementById('smp-chat-messages');
-    const el   = document.createElement('div');
-    el.className = 'smp-msg ' + cls;
-    el.innerHTML = text.replace(/\n/g, '<br>');
-    msgs.appendChild(el);
-    msgs.scrollTop = msgs.scrollHeight;
-    return el;
+  function closeChat() {
+    isOpen = false;
+    win.classList.remove('smp-open');
+    win.style.animation = 'smp-window-out 0.3s ease forwards';
+    setTimeout(() => {
+      win.style.display = 'none';
+      win.style.animation = '';
+    }, 300);
+  }
+
+  // ── Events ──────────────────────────────────────────────────
+  fab.addEventListener('click', function(e) {
+    e.stopPropagation();
+    isOpen ? closeChat() : openChat();
+  });
+
+  // Close on outside click
+  document.addEventListener('click', function(e) {
+    if (isOpen && !win.contains(e.target) && e.target !== fab) {
+      closeChat();
+    }
+  });
+
+  // ── Wire up buttons after DOM is ready ──────────────────────
+  function wireEvents() {
+    const closeBtn = document.getElementById('smp-close-btn');
+    const sendBtn  = document.getElementById('smp-send');
+    const input    = document.getElementById('smp-input');
+    const suggBox  = document.getElementById('smp-sugg');
+
+    if (!closeBtn || !sendBtn || !input) {
+      setTimeout(wireEvents, 50);
+      return;
+    }
+
+    closeBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      closeChat();
+    });
+
+    sendBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      doSend();
+    });
+
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        doSend();
+      }
+    });
+
+    // Stop window clicks bubbling to document close handler
+    win.addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+
+    // Suggestion chips
+    if (suggBox) {
+      suggBox.addEventListener('click', function(e) {
+        const btn = e.target.closest('.smp-sq');
+        if (!btn) return;
+        // Strip emoji prefix for cleaner query
+        input.value = btn.textContent.replace(/^[^\w\u0600-\u06FF]+/, '').trim();
+        suggBox.style.display = 'none';
+        doSend();
+      });
+    }
+  }
+
+  wireEvents();
+
+  // ── Send Message ────────────────────────────────────────────
+  function doSend() {
+    const input   = document.getElementById('smp-input');
+    const sendBtn = document.getElementById('smp-send');
+    const suggBox = document.getElementById('smp-sugg');
+    if (!input || !sendBtn) return;
+
+    const text = input.value.trim();
+    if (!text || sendBtn.disabled) return;
+
+    if (suggBox) suggBox.style.display = 'none';
+
+    input.value = '';
+    sendBtn.disabled = true;
+
+    addMsg(text, 'user');
+
+    // Typing indicator
+    const typEl = document.createElement('div');
+    typEl.className = 'smp-typing';
+    typEl.innerHTML = '<span></span><span></span><span></span>';
+    const msgsEl = document.getElementById('smp-msgs');
+    msgsEl.appendChild(typEl);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+
+    setTimeout(function() {
+      if (typEl.parentNode) typEl.remove();
+      addMsg(getReply(text), 'bot');
+      sendBtn.disabled = false;
+      if (input) input.focus();
+    }, 550 + Math.random() * 300);
+  }
+
+  function addMsg(html, cls) {
+    const msgsEl = document.getElementById('smp-msgs');
+    if (!msgsEl) return;
+    const el = document.createElement('div');
+    el.className = 'smp-m ' + cls;
+    el.innerHTML = html;
+    msgsEl.appendChild(el);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
   }
 
 })();
