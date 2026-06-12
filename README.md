@@ -13,7 +13,7 @@
 
 | Service | URL |
 |---------|-----|
-| 🖥️ Frontend | [student-market-palace.vercel.app](https://student-market-palace.vercel.app) |
+| 🖥️ Frontend | [student-market-palace.vercel.app](https://student-market-place-documentation.vercel.app) |
 | ⚙️ Backend API | [Railway — /docs](https://student-market-place-documentation-production.up.railway.app/docs) |
 
 ---
