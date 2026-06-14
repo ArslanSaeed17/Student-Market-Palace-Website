@@ -17,9 +17,9 @@ SECRET_KEY                  = os.environ.get("SECRET_KEY", "SUPER_SECRET_COMPLEX
 ALGORITHM                   = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 120
 
-# Gmail — set these as environment variables on Railway/Render
-GMAIL_USER = os.environ.get("GMAIL_USER", "your@gmail.com")
-GMAIL_PASS = os.environ.get("GMAIL_PASS", "your-app-password")
+# Brevo SMTP — works on Railway (Gmail port 465 is blocked on Railway free plan)
+BREVO_USER = os.environ.get("BREVO_USER", "your@email.com")
+BREVO_PASS = os.environ.get("BREVO_PASS", "your-brevo-smtp-key")
 
 models.Base.metadata.create_all(bind=database.engine)
 
@@ -77,7 +77,7 @@ def generate_otp() -> str:
 def send_otp_email(to_email: str, otp: str, name: str = "Student"):
     msg = MIMEMultipart('alternative')
     msg['Subject'] = '🔐 Your Student Market Palace Verification Code'
-    msg['From']    = GMAIL_USER
+    msg['From']    = BREVO_USER
     msg['To']      = to_email
 
     html = f"""
@@ -103,9 +103,10 @@ def send_otp_email(to_email: str, otp: str, name: str = "Student"):
     """
     msg.attach(MIMEText(html, 'html'))
 
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-        smtp.login(GMAIL_USER, GMAIL_PASS)
-        smtp.sendmail(GMAIL_USER, to_email, msg.as_string())
+    with smtplib.SMTP('smtp-relay.brevo.com', 587) as smtp:
+        smtp.starttls()
+        smtp.login(BREVO_USER, BREVO_PASS)
+        smtp.sendmail(BREVO_USER, to_email, msg.as_string())
 
 # ── API ENDPOINTS ─────────────────────────────────────────────────────────────
 
