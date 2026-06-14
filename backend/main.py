@@ -6,11 +6,14 @@ from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
-import random, string, smtplib, os
+import random, string, smtplib, os, logging, traceback
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 import models, schemas, database
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # ── Config ────────────────────────────────────────────────────────────────────
 SECRET_KEY                  = os.environ.get("SECRET_KEY", "SUPER_SECRET_COMPLEX_PASSPHRASE_FOR_CAMPUS_MARKETPLACE_OSSD_Y9")
@@ -136,7 +139,10 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_d
     try:
         send_otp_email(user.email, otp, user.name)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Account created but email failed: {str(e)}")
+        tb = traceback.format_exc()
+        logger.error("EMAIL SEND FAILED: " + tb)
+        print("EMAIL SEND FAILED FULL ERROR: " + tb, flush=True)
+        raise HTTPException(status_code=500, detail="Email failed: " + str(e))
 
     return {"message": "OTP sent to your email. Please verify to complete registration."}
 
