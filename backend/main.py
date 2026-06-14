@@ -77,16 +77,11 @@ def get_user_from_header(authorization: Optional[str] = Header(None), db: Sessio
 def generate_otp() -> str:
     return ''.join(random.choices(string.digits, k=6))
 
-def send_otp_email(to_email: str, otp: str, name: str = "Student"):
-    msg = MIMEMultipart('alternative')
-    msg['Subject'] = '🔐 Your Student Market Palace Verification Code'
-    msg['From']    = BREVO_USER
-    msg['To']      = to_email
-
-    html = f"""
+def build_otp_html(name: str, otp: str) -> str:
+    return f"""
     <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;background:#0f0f1a;border-radius:16px;overflow:hidden;">
       <div style="background:linear-gradient(135deg,#7c3aed,#a855f7);padding:32px;text-align:center;">
-        <div style="font-size:36px">🎓</div>
+        <div style="font-size:36px">&#127891;</div>
         <h1 style="color:white;margin:8px 0;font-size:22px;">Student Market Palace</h1>
         <p style="color:#e9d5ff;margin:0;font-size:14px;">Email Verification</p>
       </div>
@@ -96,20 +91,52 @@ def send_otp_email(to_email: str, otp: str, name: str = "Student"):
         <div style="background:#0f0f1a;border:2px dashed #7c3aed;border-radius:12px;padding:28px;text-align:center;margin:24px 0;">
           <span style="font-size:48px;font-weight:900;letter-spacing:14px;color:#a855f7;">{otp}</span>
         </div>
-        <p style="color:#888;font-size:13px;text-align:center;">⏱ This code expires in <strong style="color:#ccc;">10 minutes</strong></p>
-        <p style="color:#888;font-size:13px;text-align:center;">Do not share this code with anyone.</p>
+        <p style="color:#888;font-size:13px;text-align:center;">This code expires in 10 minutes. Do not share it.</p>
       </div>
       <div style="background:#0f0f1a;padding:16px;text-align:center;border-top:1px solid #2a2a3e;">
-        <p style="color:#555;font-size:12px;margin:0;">Student Market Palace — UMT Campus</p>
+        <p style="color:#555;font-size:12px;margin:0;">Student Market Palace - UMT Campus</p>
       </div>
     </div>
     """
-    msg.attach(MIMEText(html, 'html'))
 
-    with smtplib.SMTP('smtp-relay.brevo.com', 587) as smtp:
-        smtp.starttls()
-        smtp.login(BREVO_USER, BREVO_PASS)
-        smtp.sendmail(BREVO_USER, to_email, msg.as_string())
+def send_otp_email(to_email: str, otp: str, name: str = "Student"):
+    """Send OTP via Brevo HTTP API (works on Railway — no SMTP port blocking)."""
+    import urllib.request, json as _json
+
+    brevo_api_key = os.environ.get("BREVO_API_KEY", "")
+
+    if brevo_api_key:
+        # Use Brevo HTTP API — never blocked by Railway
+        payload = _json.dumps({
+            "sender":   {"name": "Student Market Palace", "email": BREVO_USER},
+            "to":       [{"email": to_email, "name": name}],
+            "subject":  "Your Student Market Palace Verification Code",
+            "htmlContent": build_otp_html(name, otp)
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.brevo.com/v3/smtp/email",
+            data=payload,
+            headers={
+                "accept":       "application/json",
+                "content-type": "application/json",
+                "api-key":      brevo_api_key,
+            },
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = resp.read()
+            logger.info("Brevo API response: " + str(result))
+    else:
+        # Fallback: SMTP
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = "Your Student Market Palace Verification Code"
+        msg["From"]    = BREVO_USER
+        msg["To"]      = to_email
+        msg.attach(MIMEText(build_otp_html(name, otp), "html"))
+        with smtplib.SMTP_SSL("smtp-relay.brevo.com", 465) as smtp:
+            smtp.login(BREVO_USER, BREVO_PASS)
+            smtp.sendmail(BREVO_USER, to_email, msg.as_string())
 
 # ── API ENDPOINTS ─────────────────────────────────────────────────────────────
 
