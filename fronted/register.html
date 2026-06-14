@@ -112,8 +112,9 @@
 
     try {
       await API.register(name, email, password);
-      showAlert('✅ Account created! Redirecting to login…', 'success');
-      setTimeout(() => window.location.href = 'login.html', 1500);
+      showAlert('✅ OTP sent to your email! Redirecting…', 'success');
+      sessionStorage.setItem('otp_email', email);
+      setTimeout(() => window.location.href = 'verify.html', 1500);
     } catch(err) {
       showAlert(err.message || 'Registration failed. Try again.', 'error');
       btn.textContent = 'Create Account →';
