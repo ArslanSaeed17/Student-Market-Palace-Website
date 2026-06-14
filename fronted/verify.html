@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verify Email — Student Market Palace</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .otp-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin: 24px 0;
+    }
+    .otp-row input {
+      width: 52px;
+      height: 62px;
+      text-align: center;
+      font-size: 26px;
+      font-weight: 800;
+      border: 2px solid var(--border2);
+      border-radius: 12px;
+      background: var(--bg3);
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      caret-color: var(--purple-light);
+    }
+    .otp-row input:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.2);
+    }
+    .otp-row input.filled {
+      border-color: var(--purple-light);
+      background: rgba(139,92,246,0.08);
+    }
+    .email-pill {
+      display: inline-block;
+      background: var(--purple-dim);
+      border: 1px solid var(--border2);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 0.85rem;
+      color: var(--purple-light);
+      margin-bottom: 24px;
+      word-break: break-all;
+    }
+    .timer {
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--text3);
+      margin-top: 12px;
+    }
+    .timer span { color: var(--amber); font-weight: 700; }
+    .resend-row {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 0.85rem;
+      color: var(--text3);
+    }
+    .resend-row a {
+      color: var(--purple-light);
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .resend-row a:hover { text-decoration: underline; }
+    .resend-row a.disabled { color: var(--text3); pointer-events: none; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a class="nav-brand" href="index.html">🎓 Student Market Palace</a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="products.html">Browse</a>
+    <a href="login.html">Login</a>
+    <a href="register.html" class="btn-nav">Register</a>
+  </div>
+</nav>
+
+<div class="auth-page">
+  <div class="auth-card" style="text-align:center;">
+    <span class="auth-icon">📧</span>
+    <h2>Check Your Email</h2>
+    <p class="auth-sub">We sent a 6-digit verification code to:</p>
+    <div class="email-pill" id="emailDisplay">—</div>
+
+    <div id="alertBox"></div>
+
+    <form id="otpForm" onsubmit="handleVerify(event)">
+      <div class="otp-row" id="otpRow">
+        <input type="text" maxlength="1" inputmode="numeric" class="otp-digit" autocomplete="one-time-code">
+        <input type="text" maxlength="1" inputmode="numeric" class="otp-digit">
+        <input type="text" maxlength="1" inputmode="numeric" class="otp-digit">
+        <input type="text" maxlength="1" inputmode="numeric" class="otp-digit">
+        <input type="text" maxlength="1" inputmode="numeric" class="otp-digit">
+        <input type="text" maxlength="1" inputmode="numeric" class="otp-digit">
+      </div>
+      <input type="hidden" id="otpHidden">
+      <button type="submit" class="btn-primary" id="verifyBtn">Verify Email ✓</button>
+    </form>
+
+    <div class="timer">Code expires in <span id="countdown">10:00</span></div>
+
+    <div class="resend-row">
+      Didn't receive it?
+      <a id="resendLink" onclick="handleResend()">Resend OTP</a>
+    </div>
+    <div class="resend-row" style="margin-top:10px;">
+      <a href="register.html">← Use a different email</a>
+    </div>
+  </div>
+</div>
+
+<div id="footerContent"></div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  // Get email from sessionStorage
+  const email = sessionStorage.getItem('otp_email');
+  if (!email) window.location.href = 'register.html';
+  document.getElementById('emailDisplay').textContent = email;
+
+  // ── OTP input behavior ──────────────────────────────────────────────────
+  const digits = document.querySelectorAll('.otp-digit');
+
+  digits.forEach((inp, i) => {
+    inp.addEventListener('input', () => {
+      inp.value = inp.value.replace(/\D/g, '').slice(0,1);
+      inp.classList.toggle('filled', inp.value !== '');
+      if (inp.value && i < digits.length - 1) digits[i+1].focus();
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !inp.value && i > 0) {
+        digits[i-1].value = '';
+        digits[i-1].classList.remove('filled');
+        digits[i-1].focus();
+      }
+    });
+    inp.addEventListener('paste', e => {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'');
+      [...text.slice(0,6)].forEach((ch, j) => {
+        if (digits[j]) { digits[j].value = ch; digits[j].classList.add('filled'); }
+      });
+      digits[Math.min(text.length, 5)].focus();
+    });
+  });
+
+  digits[0].focus();
+
+  // ── Countdown timer ─────────────────────────────────────────────────────
+  let seconds = 600;
+  const countdownEl = document.getElementById('countdown');
+  const resendLink  = document.getElementById('resendLink');
+
+  const timer = setInterval(() => {
+    seconds--;
+    const m = String(Math.floor(seconds / 60)).padStart(2,'0');
+    const s = String(seconds % 60).padStart(2,'0');
+    countdownEl.textContent = `${m}:${s}`;
+    if (seconds <= 0) {
+      clearInterval(timer);
+      countdownEl.textContent = 'Expired';
+      countdownEl.style.color = 'var(--red)';
+    }
+  }, 1000);
+
+  // ── Verify OTP ───────────────────────────────────────────────────────────
+  async function handleVerify(e) {
+    e.preventDefault();
+    const otp = [...digits].map(d => d.value).join('');
+    if (otp.length < 6) { showAlert('Please enter all 6 digits.', 'error'); return; }
+
+    const btn = document.getElementById('verifyBtn');
+    btn.textContent = 'Verifying…';
+    btn.disabled    = true;
+
+    try {
+      const data = await API.verifyOTP(email, otp);
+      // Save token — user is logged in
+      localStorage.setItem('token', data.access_token);
+      sessionStorage.removeItem('otp_email');
+      showAlert('✅ Email verified! Welcome to Student Market Palace!', 'success');
+      setTimeout(() => window.location.href = 'index.html', 1500);
+    } catch(err) {
+      showAlert(err.message || 'Verification failed.', 'error');
+      btn.textContent = 'Verify Email ✓';
+      btn.disabled    = false;
+      // Shake the boxes
+      digits.forEach(d => { d.style.borderColor = 'var(--red)'; });
+      setTimeout(() => digits.forEach(d => d.style.borderColor = ''), 800);
+    }
+  }
+
+  // ── Resend OTP ───────────────────────────────────────────────────────────
+  async function handleResend() {
+    resendLink.classList.add('disabled');
+    resendLink.textContent = 'Sending…';
+    try {
+      await API.resendOTP(email);
+      showAlert('✅ New OTP sent! Check your email.', 'success');
+      // Reset timer
+      seconds = 600;
+      countdownEl.style.color = '';
+    } catch(err) {
+      showAlert(err.message || 'Could not resend. Try again.', 'error');
+    }
+    setTimeout(() => {
+      resendLink.classList.remove('disabled');
+      resendLink.textContent = 'Resend OTP';
+    }, 30000); // allow resend after 30s
+  }
+
+  function showAlert(msg, type) {
+    document.getElementById('alertBox').innerHTML =
+      `<div class="alert alert-${type}">${msg}</div>`;
+  }
+
+  if (typeof renderFooter === 'function') renderFooter('footerContent');
+</script>
+</body>
+</html>
