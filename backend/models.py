@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 import datetime
 from database import Base
 
+
 class User(Base):
     __tablename__ = "users"
 
@@ -10,12 +11,13 @@ class User(Base):
     name        = Column(String(100), nullable=False)
     email       = Column(String(150), unique=True, nullable=False, index=True)
     password    = Column(Text, nullable=False)
-    is_verified = Column(Boolean, default=False)   # ← NEW: email verified?
+    is_verified = Column(Boolean, default=False)
     created_at  = Column(DateTime, default=datetime.datetime.utcnow)
 
     products = relationship("Product", back_populates="owner")
 
-class OTPCode(Base):                               # ← NEW table
+
+class OTPCode(Base):
     __tablename__ = "otp_codes"
 
     id         = Column(Integer, primary_key=True, index=True)
@@ -23,6 +25,7 @@ class OTPCode(Base):                               # ← NEW table
     code       = Column(String(6), nullable=False)
     expires_at = Column(DateTime, nullable=False)
     used       = Column(Boolean, default=False)
+
 
 class Product(Base):
     __tablename__ = "products"
@@ -39,3 +42,7 @@ class Product(Base):
     created_at  = Column(DateTime, default=datetime.datetime.utcnow)
 
     owner = relationship("User", back_populates="products")
+
+    # Non-DB fields for seller info in response
+    seller_name:  str = None
+    seller_email: str = None
