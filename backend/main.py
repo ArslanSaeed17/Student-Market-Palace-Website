@@ -20,7 +20,6 @@ SECRET_KEY                  = os.environ.get("SECRET_KEY", "SUPER_SECRET_COMPLEX
 ALGORITHM                   = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 120
 
-# Brevo SMTP — works on Railway (Gmail port 465 is blocked on Railway free plan)
 BREVO_USER = os.environ.get("BREVO_USER", "your@email.com")
 BREVO_PASS = os.environ.get("BREVO_PASS", "your-brevo-smtp-key")
 
@@ -47,6 +46,11 @@ class ResendOTPRequest(BaseModel):
     email: EmailStr
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+def is_edu_email(email: str) -> bool:
+    """Allow only university email addresses."""
+    email = email.lower()
+    return email.endswith(".edu") or email.endswith(".edu.pk")
+
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
@@ -106,7 +110,6 @@ def send_otp_email(to_email: str, otp: str, name: str = "Student"):
     brevo_api_key = os.environ.get("BREVO_API_KEY", "")
 
     if brevo_api_key:
-        # Use Brevo HTTP API — never blocked by Railway
         payload = _json.dumps({
             "sender":   {"name": "Student Market Palace", "email": BREVO_USER},
             "to":       [{"email": to_email, "name": name}],
@@ -128,7 +131,6 @@ def send_otp_email(to_email: str, otp: str, name: str = "Student"):
             result = resp.read()
             logger.info("Brevo API response: " + str(result))
     else:
-        # Fallback: SMTP
         msg = MIMEMultipart("alternative")
         msg["Subject"] = "Your Student Market Palace Verification Code"
         msg["From"]    = BREVO_USER
@@ -138,16 +140,31 @@ def send_otp_email(to_email: str, otp: str, name: str = "Student"):
             smtp.login(BREVO_USER, BREVO_PASS)
             smtp.sendmail(BREVO_USER, to_email, msg.as_string())
 
+def attach_seller_info(products, db):
+    """Attach seller name and email to product objects."""
+    for p in products:
+        seller = db.query(models.User).filter(models.User.user_id == p.user_id).first()
+        p.seller_name  = seller.name  if seller else None
+        p.seller_email = seller.email if seller else None
+    return products
+
 # ── API ENDPOINTS ─────────────────────────────────────────────────────────────
 
-# 1. Register — now sends OTP, does NOT create account yet
+# 1. Register
 @app.post("/register", status_code=200)
 def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
+
+    # ✅ Edu email check
+    if not is_edu_email(user.email):
+        raise HTTPException(
+            status_code=400,
+            detail="Only university email addresses are allowed (e.g. @umt.edu.pk, @lums.edu.pk, @mit.edu)"
+        )
+
     existing = db.query(models.User).filter(models.User.email == user.email).first()
     if existing and existing.is_verified:
         raise HTTPException(status_code=400, detail="An account with this email already exists.")
 
-    # If unverified account exists, delete it and re-register
     if existing and not existing.is_verified:
         db.delete(existing)
         db.commit()
@@ -156,7 +173,6 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_d
     new_user = models.User(name=user.name, email=user.email, password=hashed, is_verified=False)
     db.add(new_user)
 
-    # Generate OTP
     otp     = generate_otp()
     expires = datetime.utcnow() + timedelta(minutes=10)
     db.query(models.OTPCode).filter(models.OTPCode.email == user.email).delete()
@@ -173,7 +189,7 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_d
 
     return {"message": "OTP sent to your email. Please verify to complete registration."}
 
-# 2. Verify OTP — creates the verified account
+# 2. Verify OTP
 @app.post("/verify-otp", status_code=200)
 def verify_otp(payload: OTPVerifyRequest, db: Session = Depends(database.get_db)):
     record = db.query(models.OTPCode).filter(
@@ -188,7 +204,6 @@ def verify_otp(payload: OTPVerifyRequest, db: Session = Depends(database.get_db)
     if record.code != payload.otp.strip():
         raise HTTPException(status_code=400, detail="Incorrect OTP. Please try again.")
 
-    # Mark OTP used & verify user
     record.used = True
     user = db.query(models.User).filter(models.User.email == payload.email).first()
     if not user:
@@ -196,7 +211,6 @@ def verify_otp(payload: OTPVerifyRequest, db: Session = Depends(database.get_db)
     user.is_verified = True
     db.commit()
 
-    # Return token so user is logged in immediately
     token = create_access_token({"sub": user.email})
     return {"message": "Email verified successfully!", "access_token": token, "token_type": "bearer", "user_id": user.user_id}
 
@@ -222,9 +236,17 @@ def resend_otp(payload: ResendOTPRequest, db: Session = Depends(database.get_db)
 
     return {"message": "New OTP sent to your email."}
 
-# 4. Login — blocks unverified users
+# 4. Login
 @app.post("/login", response_model=schemas.Token)
 def login_user(user_credentials: schemas.UserLogin, db: Session = Depends(database.get_db)):
+
+    # ✅ Edu email check
+    if not is_edu_email(user_credentials.email):
+        raise HTTPException(
+            status_code=400,
+            detail="Only university email addresses are allowed (e.g. @umt.edu.pk, @lums.edu.pk, @mit.edu)"
+        )
+
     user = db.query(models.User).filter(models.User.email == user_credentials.email).first()
     if not user or not verify_password(user_credentials.password, user.password):
         raise HTTPException(status_code=401, detail="Invalid email or password.")
@@ -236,10 +258,11 @@ def login_user(user_credentials: schemas.UserLogin, db: Session = Depends(databa
 # 5. Search [Public]
 @app.get("/products/search", response_model=List[schemas.ProductResponse])
 def search_products(keyword: str, db: Session = Depends(database.get_db)):
-    return db.query(models.Product).filter(
+    products = db.query(models.Product).filter(
         (models.Product.title.ilike(f"%{keyword}%")) |
         (models.Product.description.ilike(f"%{keyword}%"))
     ).all()
+    return attach_seller_info(products, db)
 
 # 6. Filter [Public]
 @app.get("/products/filter", response_model=List[schemas.ProductResponse])
@@ -247,12 +270,15 @@ def filter_products(category: Optional[str] = None, status: Optional[str] = "ava
     query = db.query(models.Product)
     if category: query = query.filter(models.Product.category.ilike(category))
     if status:   query = query.filter(models.Product.status == status)
-    return query.all()
+    return attach_seller_info(query.all(), db)
 
 # 7. Get All Products [Public]
 @app.get("/products", response_model=List[schemas.ProductResponse])
 def get_products(skip: int = 0, limit: int = 20, db: Session = Depends(database.get_db)):
-    return db.query(models.Product).filter(models.Product.status == "available").offset(skip).limit(limit).all()
+    products = db.query(models.Product).filter(
+        models.Product.status == "available"
+    ).offset(skip).limit(limit).all()
+    return attach_seller_info(products, db)
 
 # 8. Get Product by ID [Public]
 @app.get("/products/{id}", response_model=schemas.ProductResponse)
