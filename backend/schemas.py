@@ -47,7 +47,7 @@ class ProductResponse(BaseModel):
     condition: str
     status: str
     image_url: Optional[str]
-    user_id: int
+    user_id: Optional[int]
     created_at: datetime
     seller_name: Optional[str] = None
     seller_email: Optional[str] = None
