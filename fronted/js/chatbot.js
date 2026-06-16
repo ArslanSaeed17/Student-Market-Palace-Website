@@ -158,7 +158,7 @@
       right: 32px !important;
       z-index: 2147483646 !important;
       width: 370px;
-      height: 590px;
+      max-height: calc(100vh - 140px);
       display: none;
       flex-direction: column;
       border-radius: 24px;
