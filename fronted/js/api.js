@@ -1,5 +1,4 @@
 // ============================================================
-//  API Configuration — change this to your backend URL
 // ============================================================
 const BASE_URL = 'https://student-market-place-documentation-production.up.railway.app';
 
